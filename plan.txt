@@ -1,0 +1,11 @@
+1 - Check the market_forecast_thesis folder. There is a weather forecast api. We'll also use it in this project. 
+2 - We need a modern flask api to show some price graphs. It should be interactive and modern. 
+3 - User should be able to select different markets. 
+4 - There should be an excel export option. User should be able to save its plots. 
+5 - We need to integrate a forecast using xgboost algorithm. If user wants to forecast next 1-2 days, the algorithm should fetch previous price data to train model and use it. You can check how to use xgboost from market_forecast_thesis folder. 
+6 - All codes should be english. 
+7 - Never add any comment line to the code. 
+8 - Don't assume anything. Don't leave codespaces empty. 
+9 - In the final, product should be ready. 
+10 - Always consider docker syntax. I will run it in docker later. You can check docker settings.
+So our final aim is to code a useful product to interact with GME italian energy markets interactively. There are also some manuals exist in gme.pdf file. 

@@ -186,7 +186,6 @@ class GMEClient:
         Markets: TEE (Energy Efficiency Certificates), GO (Guarantees of Origin)
         DataName: ENV_Results (Generic results) or ENV_AuctionResults
         """
-        # Defaulting to ENV_Results as it covers CV, GO, TEE
         return self._get_data(market, "ENV_Results", date_obj)
 
 

@@ -2,3 +2,10 @@ requests
 python-dotenv
 pandas
 lxml
+flask
+flask-cors
+xgboost
+openpyxl
+scikit-learn
+numpy
+holidays

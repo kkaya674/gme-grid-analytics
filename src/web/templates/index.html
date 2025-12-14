@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GME Market Analytics Platform</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="app-container">
+        <header class="header">
+            <div class="header-content">
+                <h1 class="logo">GME Market Analytics</h1>
+                <p class="subtitle">Italian Energy Market Analysis & Forecasting Platform</p>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <div class="controls-panel glass-panel">
+                <div class="controls-grid">
+                    <div class="control-group">
+                        <label for="marketType">Market Type</label>
+                        <select id="marketType" class="select-input">
+                            <option value="electricity">Electricity Market</option>
+                            <option value="gas">Gas Market</option>
+                            <option value="environmental">Environmental Market</option>
+                        </select>
+                    </div>
+                    
+                    <div class="control-group">
+                        <label for="market">Market</label>
+                        <select id="market" class="select-input">
+                            <option value="">Loading...</option>
+                        </select>
+                    </div>
+                    
+                    <div class="control-group">
+                        <label for="startDate">Start Date</label>
+                        <input type="date" id="startDate" class="date-input">
+                    </div>
+                    
+                    <div class="control-group">
+                        <label for="endDate">End Date</label>
+                        <input type="date" id="endDate" class="date-input">
+                    </div>
+                    
+                    <div class="control-group">
+                        <label for="forecastDays">Forecast Days</label>
+                        <select id="forecastDays" class="select-input">
+                            <option value="1">1 Day</option>
+                            <option value="2" selected>2 Days</option>
+                            <option value="3">3 Days</option>
+                        </select>
+                    </div>
+                    
+                    <div class="control-actions">
+                        <button id="btnFetch" class="btn btn-primary">
+                            <span class="btn-text">Fetch Data</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="chart-section glass-panel">
+                <div class="chart-header">
+                    <h2 class="chart-title">Price Analysis</h2>
+                    <div class="chart-actions">
+                        <button id="btnForecast" class="btn btn-secondary" disabled>
+                            <span class="btn-text">Generate Forecast (XGBoost)</span>
+                        </button>
+                        <button id="btnExport" class="btn btn-secondary" disabled>
+                            <span class="btn-text">Export to Excel</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="priceChart"></canvas>
+                </div>
+            </div>
+
+            <div class="data-section glass-panel">
+                <div class="section-header">
+                    <h2 class="section-title">Market Data</h2>
+                    <div class="data-stats" id="dataStats"></div>
+                </div>
+                <div class="table-container">
+                    <table id="dataTable" class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Hour</th>
+                                <th>Price (€/MWh)</th>
+                                <th>Volume (MWh)</th>
+                                <th>Type</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody">
+                            <tr>
+                                <td colspan="5" class="empty-state">Select market and date range to load data</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+
+        <div id="loadingOverlay" class="loading-overlay">
+            <div class="spinner"></div>
+            <p class="loading-text">Loading data...</p>
+        </div>
+    </div>
+    <script src="/static/script.js?v=2"></script>
+</body>
+</html>
