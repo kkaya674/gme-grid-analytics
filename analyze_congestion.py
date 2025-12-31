@@ -56,23 +56,35 @@ def analyze_congestion(flow_csv, price_csv, output_dir='analysis'):
     
     Path(output_dir).mkdir(exist_ok=True)
     
-    # Analysis 1: Top congested corridors
-    print("\n1. TOP CONGESTED CORRIDORS (Average Utilization)")
-    avg_util = flows_df.groupby('corridor')['utilization'].mean().sort_values(ascending=False).head(10)
+    # Filter to ONLY network corridors (exclude external borders)
+    network_corridors = set()
+    for idx, row in network.lines.iterrows():
+        network_corridors.add(f"{row.bus0}-{row.bus1}")
+        network_corridors.add(f"{row.bus1}-{row.bus0}")  # bidirectional
+    
+    # Filter flows to network corridors only
+    network_flows = flows_df[flows_df['corridor'].isin(network_corridors)].copy()
+    
+    print(f"\nFiltered to {len(network_corridors)} network corridors:")
+    print(f"  Total flow records: {len(flows_df)} → {len(network_flows)} (network only)")
+    
+    # Analysis 1: Top congested NETWORK corridors
+    print("\n1. TOP CONGESTED NETWORK CORRIDORS (Average Utilization)")
+    avg_util = network_flows.groupby('corridor')['utilization'].mean().sort_values(ascending=False).head(15)
     print(avg_util.to_string())
     
-    # Analysis 2: Morning vs Midday pattern
+    # Analysis 2: Morning vs Midday pattern (NETWORK CORRIDORS ONLY)
     print("\n2. MORNING (07:00-10:00) vs MIDDAY (12:00-15:00) PATTERN")
     
-    morning_flows = flows_df[flows_df['hour'].between(7, 10)]
-    midday_flows = flows_df[flows_df['hour'].between(12, 15)]
+    morning_flows = network_flows[network_flows['hour'].between(7, 10)]
+    midday_flows = network_flows[network_flows['hour'].between(12, 15)]
     
-    print("\nMorning peak - Top 5 congested:")
-    morning_top = morning_flows.groupby('corridor')['utilization'].mean().sort_values(ascending=False).head(5)
+    print("\nMorning peak - Top 10 congested:")
+    morning_top = morning_flows.groupby('corridor')['utilization'].mean().sort_values(ascending=False).head(10)
     print(morning_top.to_string())
     
-    print("\nMidday solar peak - Top 5 congested:")
-    midday_top = midday_flows.groupby('corridor')['utilization'].mean().sort_values(ascending=False).head(5)
+    print("\nMidday solar peak - Top 10 congested:")
+    midday_top = midday_flows.groupby('corridor')['utilization'].mean().sort_values(ascending=False).head(10)
     print(midday_top.to_string())
     
     # Analysis 3: North vs South flow direction
@@ -101,31 +113,28 @@ def analyze_congestion(flow_csv, price_csv, output_dir='analysis'):
     # Visualization 1: Heatmap of utilization by hour and corridor
     print("\n4. GENERATING VISUALIZATIONS...")
     
-    pivot_util = flows_df.pivot_table(
+    pivot_util = network_flows.pivot_table(
         values='utilization',
         index='corridor',
         columns='hour',
         aggfunc='mean'
     )
     
-    # Filter to only finite utilization corridors (exclude external borders with inf)
-    avg_util_finite = avg_util[avg_util < float('inf')]
-    if len(avg_util_finite) > 0:
-        top_corridors = avg_util_finite.head(15).index
+    # Show all network corridors (no need to filter, already filtered)
+    if len(avg_util) > 0:
+        top_corridors = avg_util.head(15).index
         pivot_top = pivot_util.loc[pivot_util.index.intersection(top_corridors)]
         
         fig, ax = plt.subplots(figsize=(16, 10))
         sns.heatmap(pivot_top, cmap='RdYlGn_r', center=25, vmin=0, vmax=50,
                     annot=True, fmt='.1f', cbar_kws={'label': 'Utilization (%)'})
-        plt.title('Hourly Utilization Heatmap - Top Network Corridors', fontsize=14, fontweight='bold')
+        plt.title('Hourly Utilization Heatmap - Network Corridors', fontsize=14, fontweight='bold')
         plt.xlabel('Hour')
         plt.ylabel('Corridor')
         plt.tight_layout()
         plt.savefig(f'{output_dir}/congestion_heatmap.png', dpi=200)
         print(f"  Saved: {output_dir}/congestion_heatmap.png")
         plt.close()
-    else:
-        print("  Skipping heatmap - no finite utilization data")
     
     # Visualization 2: Morning vs midday comparison
     # Filter out corridors with inf utilization (capacity = 0)
