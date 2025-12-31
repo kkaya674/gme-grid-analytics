@@ -167,13 +167,13 @@ def analyze_congestion(flow_csv, price_csv, output_dir='analysis'):
         print(f"  Saved: {output_dir}/morning_vs_midday.png")
         plt.close()
     
-    # Visualization 3: Time series of key corridors
-    key_corridors = ['NORD-CNOR', 'CNOR-CSUD', 'CSUD-SUD', 'SUD-CALA']
+    # Visualization 3: Time series of key corridors (use actual GME directions)
+    key_corridors = ['CNOR-NORD', 'CNOR-CSUD', 'CSUD-SUD', 'CALA-SUD']
     
     fig, ax = plt.subplots(figsize=(14, 6))
     for corridor in key_corridors:
-        if corridor in flows_df['corridor'].values:
-            corridor_data = flows_df[flows_df['corridor'] == corridor]
+        if corridor in network_flows['corridor'].values:
+            corridor_data = network_flows[network_flows['corridor'] == corridor]
             hourly = corridor_data.groupby('hour')['utilization'].mean()
             ax.plot(hourly.index, hourly.values, marker='o', label=corridor, linewidth=2)
     
