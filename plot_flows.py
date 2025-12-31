@@ -23,7 +23,7 @@ def main():
                        help='Hour to plot (1-24, default: 12)')
     parser.add_argument('--date', type=str, default='2025-12-30',
                        help='Date to plot (YYYY-MM-DD)')
-    parser.add_argument('--output', type=str, default='/analysis/mgp_flows.png',
+    parser.add_argument('--output', type=str, default='analysis/mgp_flows.png',
                        help='Output filename')
     
     args = parser.parse_args()
