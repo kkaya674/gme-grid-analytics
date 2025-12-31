@@ -20,7 +20,22 @@ def main():
         return
 
     # Use yesterday's date for demonstration
-    target_date = date.today() - timedelta(days=1)
+    if len(sys.argv) > 1 and sys.argv[1] == "--date":
+        # User provided --date argument
+        if len(sys.argv) > 2:
+            try:
+                from datetime import datetime
+                datetime.strptime(sys.argv[2], '%Y-%m-%d')
+                target_date = sys.argv[2]
+            except ValueError:
+                print(f"Error: Invalid date format '{sys.argv[2]}'. Use YYYY-MM-DD")
+                return
+        else:
+            print("Error: --date requires a value (YYYY-MM-DD)")
+            return
+    else:
+        # Default to yesterday
+        target_date = (date.today() - timedelta(days=1)).strftime('%Y-%m-%d')
     
     print(f"--- GME Data Fetching Demo ({target_date}) ---")
     
@@ -72,4 +87,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-```
