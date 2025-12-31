@@ -108,37 +108,55 @@ def analyze_congestion(flow_csv, price_csv, output_dir='analysis'):
         aggfunc='mean'
     )
     
-    top_corridors = avg_util.head(15).index
-    pivot_top = pivot_util.loc[pivot_util.index.intersection(top_corridors)]
-    
-    fig, ax = plt.subplots(figsize=(16, 10))
-    sns.heatmap(pivot_top, cmap='RdYlGn_r', center=50, vmin=0, vmax=100,
-                annot=False, fmt='.0f', cbar_kws={'label': 'Utilization (%)'})
-    plt.title('Hourly Utilization Heatmap - Top Congested Corridors', fontsize=14, fontweight='bold')
-    plt.xlabel('Hour')
-    plt.ylabel('Corridor')
-    plt.tight_layout()
-    plt.savefig(f'{output_dir}/congestion_heatmap.png', dpi=200)
-    print(f"  Saved: {output_dir}/congestion_heatmap.png")
-    plt.close()
+    # Filter to only finite utilization corridors (exclude external borders with inf)
+    avg_util_finite = avg_util[avg_util < float('inf')]
+    if len(avg_util_finite) > 0:
+        top_corridors = avg_util_finite.head(15).index
+        pivot_top = pivot_util.loc[pivot_util.index.intersection(top_corridors)]
+        
+        fig, ax = plt.subplots(figsize=(16, 10))
+        sns.heatmap(pivot_top, cmap='RdYlGn_r', center=25, vmin=0, vmax=50,
+                    annot=True, fmt='.1f', cbar_kws={'label': 'Utilization (%)'})
+        plt.title('Hourly Utilization Heatmap - Top Network Corridors', fontsize=14, fontweight='bold')
+        plt.xlabel('Hour')
+        plt.ylabel('Corridor')
+        plt.tight_layout()
+        plt.savefig(f'{output_dir}/congestion_heatmap.png', dpi=200)
+        print(f"  Saved: {output_dir}/congestion_heatmap.png")
+        plt.close()
+    else:
+        print("  Skipping heatmap - no finite utilization data")
     
     # Visualization 2: Morning vs midday comparison
-    fig, axes = plt.subplots(1, 2, figsize=(16, 6))
+    # Filter out corridors with inf utilization (capacity = 0)
+    morning_top_finite = morning_top[morning_top < float('inf')].head(5)
+    midday_top_finite = midday_top[midday_top < float('inf')].head(5)
     
-    morning_top.plot(kind='barh', ax=axes[0], color='orange')
-    axes[0].set_title('Morning Peak (07:00-10:00)', fontsize=12, fontweight='bold')
-    axes[0].set_xlabel('Avg Utilization (%)')
-    axes[0].set_xlim(0, 100)
-    
-    midday_top.plot(kind='barh', ax=axes[1], color='gold')
-    axes[1].set_title('Midday Solar Peak (12:00-15:00)', fontsize=12, fontweight='bold')
-    axes[1].set_xlabel('Avg Utilization (%)')
-    axes[1].set_xlim(0, 100)
-    
-    plt.tight_layout()
-    plt.savefig(f'{output_dir}/morning_vs_midday.png', dpi=200)
-    print(f"  Saved: {output_dir}/morning_vs_midday.png")
-    plt.close()
+    if len(morning_top_finite) > 0 or len(midday_top_finite) > 0:
+        fig, axes = plt.subplots(1, 2, figsize=(16, 6))
+        
+        if len(morning_top_finite) > 0:
+            morning_top_finite.plot(kind='barh', ax=axes[0], color='orange')
+            axes[0].set_title('Morning Peak (07:00-10:00)', fontsize=12, fontweight='bold')
+            axes[0].set_xlabel('Avg Utilization (%)')
+            axes[0].set_xlim(0, min(100, morning_top_finite.max() * 1.1))
+        else:
+            axes[0].text(0.5, 0.5, 'No finite data', ha='center', va='center')
+            axes[0].set_title('Morning Peak (07:00-10:00)', fontsize=12, fontweight='bold')
+        
+        if len(midday_top_finite) > 0:
+            midday_top_finite.plot(kind='barh', ax=axes[1], color='gold')
+            axes[1].set_title('Midday Solar Peak (12:00-15:00)', fontsize=12, fontweight='bold')
+            axes[1].set_xlabel('Avg Utilization (%)')
+            axes[1].set_xlim(0, min(100, midday_top_finite.max() * 1.1))
+        else:
+            axes[1].text(0.5, 0.5, 'No finite data', ha='center', va='center')
+            axes[1].set_title('Midday Solar Peak (12:00-15:00)', fontsize=12, fontweight='bold')
+        
+        plt.tight_layout()
+        plt.savefig(f'{output_dir}/morning_vs_midday.png', dpi=200)
+        print(f"  Saved: {output_dir}/morning_vs_midday.png")
+        plt.close()
     
     # Visualization 3: Time series of key corridors
     key_corridors = ['NORD-CNOR', 'CNOR-CSUD', 'CSUD-SUD', 'SUD-CALA']

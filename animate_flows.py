@@ -191,7 +191,7 @@ def create_animation(network_path, price_csv, flow_csv, output_file='mgp_animati
     
     # Save as GIF
     print(f"Saving animation to {output_file}...")
-    anim.save(output_file, writer='pillow', fps=5, dpi=100)
+    anim.save(output_file, writer='pillow', fps=5, dpi=150)
     print(f"✅ Animation saved: {output_file}")
     
     plt.close()
