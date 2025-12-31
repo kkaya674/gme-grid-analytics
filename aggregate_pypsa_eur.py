@@ -56,7 +56,15 @@ def load_pypsa_eur():
     print("=" * 60)
     
     buses = pd.read_csv(PYPSA_DATA / 'buses.csv')
-    lines = pd.read_csv(PYPSA_DATA / 'lines.csv', low_memory=False, on_bad_lines='skip')
+    
+    # Only load columns we need, ignore geometry to avoid parsing issues
+    # Use quotechar="'" to handle LINESTRING geometry fields
+    lines = pd.read_csv(
+        PYPSA_DATA / 'lines.csv',
+        usecols=['line_id', 'bus0', 'bus1', 'voltage', 'circuits', 'length'],
+        quotechar="'",
+        low_memory=False
+    )
     
     print(f"   Total buses: {len(buses):,}")
     print(f"   Total lines: {len(lines):,}")
