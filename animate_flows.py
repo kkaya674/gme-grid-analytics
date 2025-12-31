@@ -88,6 +88,17 @@ def create_animation(network_path, price_csv, flow_csv, output_file='mgp_animati
         plotter.network.lines['flow'] = 0.0
         plotter.network.lines['utilization'] = 0.0
         
+        # Load GME transmission limits for this session
+        from pathlib import Path
+        limit_file = Path('data') / f"MGP_ME_TransmissionLimits_{flow_csv.split('_')[-1]}"
+        if limit_file.exists():
+            gme_limits = pd.read_csv(limit_file)
+            gme_limits.columns = [c.strip().lower() for c in gme_limits.columns]
+            use_gme_limits = True
+        else:
+            gme_limits = None
+            use_gme_limits = False
+        
         for _, row in h_flows.iterrows():
             from_zone = str(row['from']).strip()
             to_zone = str(row['to']).strip()
@@ -99,7 +110,19 @@ def create_animation(network_path, price_csv, flow_csv, output_file='mgp_animati
             if mask.any():
                 line_idx = plotter.network.lines[mask].index[0]
                 plotter.network.lines.at[line_idx, 'flow'] = abs(transit)
+                
+                # Use GME limit if available, otherwise PyPSA s_nom
                 capacity = plotter.network.lines.at[line_idx, 's_nom']
+                if use_gme_limits:
+                    limit_row = gme_limits[
+                        (gme_limits['from'] == from_zone) & 
+                        (gme_limits['to'] == to_zone) & 
+                        (gme_limits['hour'] == hour) &
+                        (gme_limits['period'] == period)
+                    ]
+                    if len(limit_row) > 0:
+                        capacity = limit_row['maxtransmissionlimitfrom'].iloc[0]
+                
                 if capacity > 0:
                     plotter.network.lines.at[line_idx, 'utilization'] = abs(transit) / capacity * 100
         
