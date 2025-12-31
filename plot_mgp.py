@@ -88,7 +88,7 @@ def plot_mgp_data(network_path, price_csv, limit_csv, hour=12):
         bus_cmap='viridis',
         line_widths=n.lines.s_nom / 1000 + 1,
         line_colors='gray',
-        bus_sizes=0.2
+        bus_sizes=0.01  # Much smaller nodes
     )
     
     # Add text labels for prices
