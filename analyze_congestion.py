@@ -145,13 +145,16 @@ def analyze_congestion(flow_csv, price_csv, output_dir='analysis'):
     print("\nHourly North-South corridor activity:")
     print(hourly_ns.to_string())
     
-    # Visualization 1: Heatmap of utilization by hour and corridor
+    # Visualization 1: Heatmap of utilization by session and corridor
     print("\n4. GENERATING VISUALIZATIONS...")
+    
+    # Create session identifier (1-96)
+    network_flows['session'] = (network_flows['hour'] - 1) * 4 + network_flows['period']
     
     pivot_util = network_flows.pivot_table(
         values='utilization',
         index='corridor',
-        columns='hour',
+        columns='session',
         aggfunc='mean'
     )
     
@@ -160,15 +163,22 @@ def analyze_congestion(flow_csv, price_csv, output_dir='analysis'):
         top_corridors = avg_util.head(15).index
         pivot_top = pivot_util.loc[pivot_util.index.intersection(top_corridors)]
         
-        fig, ax = plt.subplots(figsize=(16, 10))
+        fig, ax = plt.subplots(figsize=(24, 10))
         sns.heatmap(pivot_top, cmap='RdYlGn_r', center=50, vmin=0, vmax=100,
-                    annot=True, fmt='.1f', cbar_kws={'label': 'Utilization (%)'})
-        plt.title('Hourly Utilization Heatmap - Network Corridors', fontsize=14, fontweight='bold')
-        plt.xlabel('Hour')
+                    annot=False, fmt='.1f', cbar_kws={'label': 'Utilization (%)'})
+        plt.title('Utilization Heatmap - Network Corridors (96 Sessions)', fontsize=14, fontweight='bold')
+        plt.xlabel('Session (15-min intervals, 1-96)')
         plt.ylabel('Corridor')
+        
+        # Add hour markers on x-axis
+        hour_ticks = [i*4 for i in range(25)]  # 0, 4, 8, ..., 96
+        hour_labels = [f'H{i:02d}' for i in range(25)]
+        ax.set_xticks(hour_ticks)
+        ax.set_xticklabels(hour_labels, rotation=0)
+        
         plt.tight_layout()
-        plt.savefig(f'{output_dir}/congestion_heatmap.png', dpi=200)
-        print(f"  Saved: {output_dir}/congestion_heatmap.png")
+        plt.savefig(f'{output_dir}/congestion_heatmap_96sessions.png', dpi=200)
+        print(f"  Saved: {output_dir}/congestion_heatmap_96sessions.png")
         plt.close()
     
     # Visualization 2: Morning vs midday comparison
