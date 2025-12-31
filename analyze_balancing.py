@@ -153,7 +153,7 @@ def analyze_market(market_name, market_file, mgp_file, output_dir, date_str, ser
     plt.close()
     
     # === PLOT 4: Buy Volumes (Bar chart) ===
-    fig, axes = plt.subplots(4, 2, figsize=(16, 14))
+    fig, axes = plt.subplots(4, 2, figsize=(16, 14), sharey=True)
     axes = axes.flatten()
     
     for idx, zone in enumerate(ITALIAN_ZONES):
@@ -179,7 +179,7 @@ def analyze_market(market_name, market_file, mgp_file, output_dir, date_str, ser
     plt.close()
     
     # === PLOT 5: Sell Volumes (Bar chart) ===
-    fig, axes = plt.subplots(4, 2, figsize=(16, 14))
+    fig, axes = plt.subplots(4, 2, figsize=(16, 14), sharey=True)
     axes = axes.flatten()
     
     for idx, zone in enumerate(ITALIAN_ZONES):
