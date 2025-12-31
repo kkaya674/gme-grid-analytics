@@ -1,13 +1,14 @@
-# GME Market Visualization Pipeline
+# GME Market Visualization & Analysis Pipeline
 
-Python pipeline for visualizing Italian electricity market (GME) data with PyPSA-Eur network topology.
+Python pipeline for analyzing Italian electricity markets (GME) with PyPSA-Eur network topology.
 
 ## Features
 
 - 🔌 **Network Visualization**: PyPSA-Eur zonal network with Italian market zones
 - 📊 **Price Mapping**: MGP, MSD, MB market prices on network topology  
 - 🌊 **Flow Analysis**: Transmission flows with GME market limits
-- 📈 **Congestion Analysis**: 96-session heatmaps showing 15-min granularity
+- 📈 **Congestion Analysis**: 96-session heatmaps (15-min granularity)
+- ⚖️ **Balancing Markets**: MSD and MB (RS/AS) price and volume analysis
 - 🎬 **Animated Flows**: 24-hour evolution (96 frames)
 
 ## Quick Start
@@ -46,83 +47,126 @@ python main.py --date 2025-12-30
 # - MGP flows (ME_Transits)
 # - GME transmission limits (ME_TransmissionLimits)
 # - MSD results (ME_MSDExAnteResults)
+# - MB results (ME_MBResults)
 ```
 
 ### 4. Generate Visualizations
 
 ```bash
-# Static price plot
-python plot_gme.py --date 2025-12-30 --hour 12
-
-# Flow visualization
-python plot_flows.py --date 2025-12-30 --hour 12
-
-# Animated 24-hour flow evolution
-python animate_flows.py --date 2025-12-30 --output mgp_animation.gif
-
-# Congestion analysis (96-session heatmap + patterns)
+# === CONGESTION ANALYSIS ===
 python analyze_congestion.py --date 2025-12-30
+# Outputs:
+# - congestion_heatmap_96sessions.png (>5% avg utilization corridors)
+# - corridor_timeseries.png
+# - morning_vs_midday.png
+
+# === BALANCING MARKETS ===
+python analyze_balancing.py --date 2025-12-30
+# Outputs (9 total):
+# MSD: zone price comparison, buy/sell volumes
+# MB_RS: zone price comparison, buy/sell volumes  
+# MB_AS: zone price comparison, buy/sell volumes
+
+# === FLOW ANIMATION ===
+python animate_flows.py --date 2025-12-30 --output analysis/mgp_animation.gif
+# 96-frame animated GIF showing 24h flow evolution
+
+# === STATIC PLOTS ===
+python plot_gme.py --market MGP --hour 12 --date 2025-12-30
+python plot_flows.py --date 2025-12-30 --hour 12
 ```
 
-## Data Pipeline
+## Repository Structure
 
 ```
-┌─────────────┐
-│  GME API    │
-│  (main.py)  │
-└──────┬──────┘
-       │
-       ├─→ data/MGP_ME_ZonalPrices_YYYY-MM-DD.csv
-       ├─→ data/MGP_ME_Transits_YYYY-MM-DD.csv
-       ├─→ data/MGP_ME_TransmissionLimits_YYYY-MM-DD.csv
-       └─→ data/MSD_ME_MSDExAnteResults_YYYY-MM-DD.csv
-       
-┌──────────────────┐
-│  Visualization   │
-└──────────────────┘
-       │
-       ├─→ plot_gme.py          (static prices)
-       ├─→ plot_flows.py        (static flows)
-       ├─→ animate_flows.py     (animated GIF)
-       └─→ analyze_congestion.py (heatmap + analysis)
+gme_api/
+├── main.py                      # Data fetcher (GME API)
+├── analyze_congestion.py        # Congestion heatmaps & analysis
+├── analyze_balancing.py         # MSD/MB balancing analysis
+├── animate_flows.py             # Animated flow visualization
+├── plot_gme.py                  # Static price plots
+├── plot_flows.py                # Static flow plots
+│
+├── src/gme_api/                 # Core library
+│   ├── client.py                # GME API client
+│   └── utils.py                 # Data processing utilities
+│
+├── plotting/                    # Visualization modules
+│   ├── plotter.py               # Base plotter class
+│   └── utils.py                 # Plot utilities
+│
+├── data/                        # Market data (CSV)
+│   ├── MGP_ME_ZonalPrices_*.csv
+│   ├── MGP_ME_Transits_*.csv
+│   ├── MGP_ME_TransmissionLimits_*.csv
+│   ├── MSD_ME_MSDExAnteResults_*.csv
+│   └── MB_ME_MBResults_*.csv
+│
+├── analysis/                    # Generated visualizations
+│   ├── congestion_heatmap_96sessions.png
+│   ├── msd_zone_price_comparison.png
+│   ├── mb_rs_zone_price_comparison.png
+│   ├── mb_as_zone_price_comparison.png
+│   └── mgp_animation.gif
+│
+├── documents/                   # Documentation & PDFs
+├── data_pypsa_eur_zonal/       # PyPSA-Eur network data
+└── italy_regions.geojson       # Italian regional boundaries
 ```
 
-## Key Files
+## Key Analysis Scripts
 
-### Core Pipeline
-- `main.py` - GME API data fetcher
-- `src/gme_api/client.py` - GME API client
-- `plotting/plotter.py` - Base visualization class
+### 1. Congestion Analysis (`analyze_congestion.py`)
+- **96-session heatmap**: Shows utilization across all 15-min intervals
+- **Filters**: Only corridors with >5% avg utilization
+- **Key findings**: CSUD→SUD (72% peak), CSUD→SARD (70% peak)
 
-### Visualization Scripts
-- `plot_gme.py` - Static price plots
-- `plot_flows.py` - Static flow plots  
-- `animate_flows.py` - Animated flow evolution
-- `analyze_congestion.py` - Congestion analysis & heatmaps
+### 2. Balancing Analysis (`analyze_balancing.py`)
+Analyzes three markets:
+- **MSD**: Mercato del Servizio di Dispacciamento (ex-ante)
+- **MB_RS**: Riserva Secondaria (secondary reserve)
+- **MB_AS**: Altro Servizi (other services)
 
-### Network Data
-- `data_pypsa_eur_zonal/` - PyPSA-Eur zonal network
-- `italy_regions.geojson` - Italian regional boundaries
+Each market generates:
+- Zone-specific price comparison (vs MGP)
+- Buy volume bar charts (7 zones)
+- Sell volume bar charts (7 zones)
 
-## Output Examples
-
-All visualization outputs are saved to:
-- `analysis/` - Congestion heatmaps and analysis plots
-- `./*.gif` - Animated flow visualizations
-
-**Note**: Output files are gitignored. See `cleanup1` branch for example outputs.
+### 3. Flow Animation (`animate_flows.py`)
+- 96 frames (24 hours × 4 periods)
+- Dynamic price updates per zone
+- Flow utilization coloring (0-100%)
+- Zone labels and country borders
 
 ## Important Notes
 
 ### Capacity Sources
-The pipeline uses **GME transmission limits** (not PyPSA s_nom estimates) for accurate utilization calculations:
+The pipeline uses **GME transmission limits** (not PyPSA s_nom) for accurate utilization:
 - GME limits = real-time market constraints (40-60% of physical capacity)
 - Accounts for N-1 security, voltage stability, real-time conditions
 
 ### Network Topology
-- **Bidirectional corridors**: Some connections have asymmetric capacities
+- **Bidirectional corridors**: Asymmetric capacities
   - Example: NORD→CNOR = 10.5 GW, CNOR→NORD = 4.5 GW
-- **External borders**: Connections to neighbors (AUST, SVIZ, FRAN, etc.)
+- **Italian zones**: NORD, CNOR, CSUD, SUD, CALA, SICI, SARD
+- **External borders**: AUST, SVIZ, FRAN, SLOV, GREC, MONT
+
+### Balancing Markets
+- **MSD**: Day-ahead balancing (ex-ante)
+  - Mostly upward regulation (grid shortage)
+- **MB_RS**: Real-time secondary reserve
+  - Often zero activity
+- **MB_AS**: Real-time other services
+  - Most active balancing market
+
+## Output Examples
+
+All visualizations saved to `analysis/`:
+- Congestion heatmaps (PNG)
+- Balancing price/volume charts (PNG)
+- Flow animations (GIF)
+
+**Note**: Output files are gitignored. See `cleanup1` branch for example outputs.
 
 ## Requirements
 
