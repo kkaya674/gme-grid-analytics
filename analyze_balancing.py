@@ -68,6 +68,36 @@ def analyze_market(market_name, market_file, mgp_file, output_dir, date_str):
     fig, axes = plt.subplots(4, 2, figsize=(16, 14))
     axes = axes.flatten()
     
+    # Calculate global min/max for consistent y-axis across all zones
+    all_buy_prices = []
+    all_sell_prices = []
+    all_mgp_prices = []
+    
+    for zone in ITALIAN_ZONES:
+        zone_market = market_it[market_it['zone'] == zone]
+        zone_mgp = mgp[mgp['zone'] == zone]
+        
+        if len(zone_market) > 0:
+            hourly_market = zone_market.groupby('hour').agg({
+                'buy_price': 'mean',
+                'sell_price': 'mean'
+            })
+            all_buy_prices.extend(hourly_market['buy_price'].values)
+            all_sell_prices.extend(hourly_market['sell_price'].values)
+        
+        if len(zone_mgp) > 0:
+            hourly_mgp = zone_mgp.groupby('hour')['price'].mean()
+            all_mgp_prices.extend(hourly_mgp.values)
+    
+    # Determine global y-axis limits
+    all_prices = all_buy_prices + all_sell_prices + all_mgp_prices
+    if len(all_prices) > 0:
+        y_min = min([p for p in all_prices if p > 0]) * 0.9 if any(p > 0 for p in all_prices) else 0
+        y_max = max(all_prices) * 1.1
+    else:
+        y_min, y_max = 0, 100
+    
+    # Now plot with consistent scale
     for idx, zone in enumerate(ITALIAN_ZONES):
         ax = axes[idx]
         zone_market = market_it[market_it['zone'] == zone].sort_values('hour')
@@ -100,6 +130,9 @@ def analyze_market(market_name, market_file, mgp_file, output_dir, date_str):
         ax.legend(fontsize=8, loc='best')
         ax.grid(alpha=0.3)
         ax.set_xticks(range(1, 25, 4))
+        
+        # Apply consistent y-axis scale
+        ax.set_ylim(y_min, y_max)
     
     axes[7].axis('off')
     fig.suptitle(f'{market_name} vs MGP Prices - {date_str}', fontsize=14, fontweight='bold', y=0.995)
