@@ -57,6 +57,10 @@ def main():
     plotter = GMEPlotter(str(network_path))
     plotter.load_network()
     plotter.load_market_data(str(price_file))
+    
+    # Extract date from loaded data
+    date_str = args.date if args.date else plotter.prices_df['flowdate'].iloc[0] if 'flowdate' in plotter.prices_df.columns else 'Unknown'
+    
     plotter.plot_market(hour=args.hour, output_file=output_file)
     
     print(f"\n✅ Done! Plot saved to: {output_file}")

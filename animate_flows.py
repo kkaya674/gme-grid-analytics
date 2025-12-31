@@ -171,8 +171,9 @@ def create_animation(network_path, price_csv, flow_csv, output_file='mgp_animati
                    bbox=dict(boxstyle='round,pad=0.3', facecolor='white', 
                             edgecolor='black', alpha=0.85, linewidth=0.5))
         
-        # Title with session info
-        plt.title(f"GME MGP Flows | Hour {hour:02d} Session {period} ({frame_idx+1}/96)", 
+        # Title with session info and date
+        date_str = plotter.flows_df['flowdate'].iloc[0] if 'flowdate' in plotter.flows_df.columns else 'Unknown'
+        plt.title(f"GME MGP Flows - {date_str} | H{hour:02d}P{period} (Session {frame_idx+1}/96)", 
                  fontsize=14, fontweight='bold')
         
         # Colorbars
