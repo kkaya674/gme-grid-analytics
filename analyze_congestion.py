@@ -171,7 +171,7 @@ def analyze_congestion(flow_csv, price_csv, output_dir='analysis'):
             fig, ax = plt.subplots(figsize=(24, 10))
             sns.heatmap(pivot_top, cmap='RdYlGn_r', center=50, vmin=0, vmax=100,
                         annot=False, fmt='.1f', cbar_kws={'label': 'Utilization (%)'})
-            plt.title(f'Congestion Heatmap - {args.date} (96 Sessions, >5% avg)', fontsize=14, fontweight='bold')
+            plt.title(f'Congestion Heatmap - {date_str} (96 Sessions, >5% avg)', fontsize=14, fontweight='bold')
             plt.xlabel('Session (15-min intervals, 1-96)')
             plt.ylabel('Corridor')
             
@@ -276,7 +276,7 @@ def main():
         print(f"Error: Data files not found for {date_str}")
         sys.exit(1)
     
-    analyze_congestion(flow_csv, price_csv, args.output)
+    analyze_congestion(flow_csv, price_csv, args.output, args.date)
 
 
 if __name__ == "__main__":
