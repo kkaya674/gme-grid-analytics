@@ -29,8 +29,8 @@ class GMEClient:
         """Authenticates with the GME API and retrieves a JWT token."""
         url = f"{self.base_url}/api/v1/Auth"
         payload = {
-            "Login": self.username,
-            "Password": self.password
+            "login": self.username,
+            "password": self.password
         }
         headers = {"Content-Type": "application/json"}
 
@@ -39,11 +39,14 @@ class GMEClient:
             response.raise_for_status()
             result = response.json()
 
-            if result.get("Success"):
+            # Check both success and Success
+            is_success = result.get("success") or result.get("Success")
+            if is_success:
                 self.token = result.get("token")
                 return True
             else:
-                print(f"Authentication failed: {result.get('Reason')}")
+                reason = result.get("reason") or result.get("Reason")
+                print(f"Authentication failed: {reason}")
                 return False
         except Exception as e:
             print(f"Login request failed: {e}")
