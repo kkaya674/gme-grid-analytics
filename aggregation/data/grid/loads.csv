@@ -1,0 +1,11 @@
+Load,bus,carrier,type,p_set,q_set,sign,active
+NORD_Load,NORD,,,0.0,0.0,-1.0,True
+CNOR_Load,CNOR,,,0.0,0.0,-1.0,True
+CSUD_Load,CSUD,,,0.0,0.0,-1.0,True
+SUD_Load,SUD,,,0.0,0.0,-1.0,True
+CALA_Load,CALA,,,0.0,0.0,-1.0,True
+SICI_Load,SICI,,,0.0,0.0,-1.0,True
+SARD_Load,SARD,,,0.0,0.0,-1.0,True
+Milano_Load,Milano,,,0.0,0.0,-1.0,True
+Roma_Load,Roma,,,0.0,0.0,-1.0,True
+Napoli_Load,Napoli,,,0.0,0.0,-1.0,True

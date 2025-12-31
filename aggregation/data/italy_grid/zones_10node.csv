@@ -1,0 +1,11 @@
+zone,region,lat,lon,demand_mw,osm_substations,osm_generators,osm_capacity_mw
+NORD,Northern Italy,45.5,9.5,25000,0,0,0
+CNOR,Central-North,43.8,11.2,5000,0,0,0
+CSUD,Central-South,41.9,12.5,6000,0,0,0
+SUD,South,40.8,16.5,4000,0,0,0
+CALA,Calabria,39.0,16.2,1500,0,0,0
+SICI,Sicily,37.5,14.0,3000,0,0,0
+SARD,Sardinia,40.0,9.0,1500,0,0,0
+Milano,Milano Metro,45.46,9.19,5000,0,0,0
+Roma,Roma Metro,41.89,12.5,4000,0,0,0
+Napoli,Napoli Metro,40.85,14.26,2500,0,0,0

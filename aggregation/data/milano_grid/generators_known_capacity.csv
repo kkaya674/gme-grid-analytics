@@ -1,0 +1,107 @@
+id,name,type,source,carrier,capacity_mw,output_raw,operator,lat,lon
+25941989,Centrale Termoelettrica di Sesto San Giovanni,plant,gas,CCGT,106.0,106 MW,Edison,45.54168449999995,9.250787900000022
+39251146,Italgen,generator,hydro,hydro,4.01,4010 kW,Italgen - Italcementi Group,45.602169300000064,9.885886600000003
+44860949,Centrale di Paisco,plant,hydro,hydro,7.0,7 MW,unknown,46.07373189999996,10.28235479999997
+48964555,Centrale elettrica Ludovico il Moro,generator,hydro,hydro,6.52,6520 kW,Enel,45.33875550000001,8.869417600000022
+51601405,Centrale termoelettrica di Turbigo,plant,gas,CCGT,1280.0,1280 MW,Iren,45.52018139999996,8.746731299999992
+51662594,Centrale di Tornavento,plant,hydro,hydro,7.0,7 MW,Enel,45.582784499999974,8.706217899999995
+61973987,Troggia,generator,hydro,hydro,0.33,0.33 MW,ENEL,45.98748279999995,9.462195400000025
+64201172,Centrale Enel di Edolo,plant,hydro,hydro,1000.0,1000 MW,Enel Produzione S.p.A.,46.17637780000017,10.353141299999967
+67400512,Centrale di Cassano d'Adda,plant,gas,CCGT,848.0,848 MW,A2A,45.51311440000004,9.50848090000001
+78593183,generator_78593183,generator,solar,solar,1.0,1 MW,unknown,45.554949799999946,9.286403599999959
+81015834,generator_81015834,generator,solar,solar,0.793,793 kW,unknown,45.474540200000064,8.878354100000031
+98900646,generator_98900646,generator,gas,CCGT,390.0,390 MW,unknown,45.09957689999989,8.866807299999987
+98900648,generator_98900648,generator,gas,CCGT,390.0,390 MW,unknown,45.10074079999989,8.867479499999988
+98900651,generator_98900651,generator,gas,CCGT,250.0,250 MW,unknown,45.09851889999989,8.866185499999988
+103227830,Termovalorizzatore di Como,plant,waste,waste,6.0,6 MW,Acinque Ambiente S.r.l.,45.77410599999998,9.071146700000003
+110298685,generator_110298685,generator,hydro,hydro,1.9,1.9 MW,Italgen,46.032320600000034,9.64840059999998
+116918904,"Centrale termoelettrica ""Edoardo Amaldi""",plant,gas,CCGT,1476.0,1476 MW,Enel,45.09023970000014,9.482541700000068
+128198971,Centrale Taccani,plant,hydro,hydro,10.5,10.5 MW,Enel Green Power,45.61280889999992,9.521779299999983
+129736793,Centrale Elettrica Angelo Bertini,generator,hydro,hydro,11.0,11 MW,unknown,45.66502640000026,9.484754500000006
+132062933,Centrale idroelettrica Rodolfo Taccani,generator,hydro,hydro,10.5,10.5 MW,unknown,45.61333370000083,9.521599999999895
+134757354,Centrale di Rango,plant,hydro,hydro,0.02,20 kW,unknown,45.669737000000225,10.497387800000034
+137363958,Ex SS11,generator,hydro,hydro,0.271,271 kW,unknown,45.436694300000354,8.753056600000075
+140187354,generator_140187354,generator,solar,solar,0.003,3 kW,unknown,45.552310399999925,9.287706399999955
+140187360,generator_140187360,generator,solar,solar,0.0057599999999999995,5.76 kW,unknown,45.54842640000034,9.282529000000036
+140187362,generator_140187362,generator,solar,solar,0.003,3 kW,unknown,45.54854060000034,9.283333200000037
+142535890,Centrale teleriscaldamento Lamarmora,plant,coal;gas,other,75.0,75 MW,A2A Calore e Servizi S.p.A.,45.51781989999999,10.211294999999986
+160148932,Centrale idroelettrica Pietro Rusca,plant,hydro,hydro,8.0,8 MW,unknown,45.53213840000002,9.529087099999952
+161312728,Centrale idroelettrica di Tagliuno,plant,hydro,hydro,2.5,2.5 MW,Enel,45.63632060000001,9.909028999999967
+162103808,"Centrali termoelettriche ""Emilia"" e ""Levante""",plant,gas,CCGT,855.0,855 MW,A2A,45.05798229999993,9.705800299999979
+163789366,Centrale idroelettrica di Isola,plant,hydro,hydro,0.0126,12.6 kW,Eusebio Energia S.p.A.,45.92482650000008,10.304135400000012
+173619151,Gandellino,plant,hydro,hydro,4.0,"4,2 MW",Enel Green Power,45.993581200002055,9.946716699999973
+176679636,generator_176679636,generator,solar,solar,0.006,6 kW,unknown,45.55695639999994,9.307817900000035
+176679638,generator_176679638,generator,solar,solar,0.003,3 kW,unknown,45.548290799999926,9.281057500000031
+176679645,generator_176679645,generator,solar,solar,0.003,3 kW,unknown,45.57236649999994,9.351234600000035
+176686381,generator_176686381,generator,solar,solar,0.006,6 kW,unknown,45.54448360000016,9.310409500000027
+176686382,generator_176686382,generator,solar,solar,0.006,6 kW,unknown,45.54336660000016,9.30652480000003
+176686386,generator_176686386,generator,solar,solar,0.01,10 kW,unknown,45.54213180000016,9.308285800000032
+176686388,generator_176686388,generator,solar,solar,0.08,80 kW,unknown,45.54213480000016,9.307969600000032
+176686392,generator_176686392,generator,solar,solar,0.0076,7.6 kW,unknown,45.544053800000164,9.314099500000026
+176686395,generator_176686395,generator,solar,solar,0.0015,1.5 kW,unknown,45.544577700000175,9.314222100000025
+176686397,generator_176686397,generator,solar,solar,0.003,3 kW,unknown,45.54057440000016,9.309905600000032
+176686398,generator_176686398,generator,solar,solar,0.006,6 kW,unknown,45.543600400000166,9.311282200000027
+176686399,generator_176686399,generator,solar,solar,0.0024,2.4 kW,unknown,45.54326000000016,9.312242900000031
+182238016,Tecnocity,plant,gas,CCGT,10.0,10 MW,Unareti,45.518340200000466,9.217376100000035
+186237110,Centrale Idroelettrica di Crespi d'Adda,plant,hydro,hydro,0.858,858 kW,unknown,45.596908000000596,9.532572900000037
+203673099,generator_203673099,generator,solar,solar,0.018,18 kW,unknown,45.53131049999999,9.313011700000029
+215378938,Aviasco,plant,hydro,hydro,7.0,"7,6 MW",Enel Green Power,45.97556570000009,9.89648729999995
+254435249,Centrale di Creva,plant,hydro,hydro,11.0,11 MW,unknown,45.99178230000002,8.757564900000013
+263273922,Biolevano,plant,biofuel,other,20.0,20 MW,unknown,45.2228635000002,8.706320099999997
+310291404,generator_310291404,generator,solar,solar,0.15,150 kW,unknown,45.55392620000006,9.387916400000023
+310291405,generator_310291405,generator,solar,solar,0.12,120 kW,unknown,45.55280200000006,9.389898500000022
+310291408,generator_310291408,generator,solar,solar,0.009,9 kW,unknown,45.55116370000002,9.39387770000002
+310291410,generator_310291410,generator,solar,solar,0.016,16 kW,unknown,45.554538300000054,9.39257710000003
+310291411,generator_310291411,generator,solar,solar,0.032,32 kW,unknown,45.55339230000004,9.393378200000017
+310291412,generator_310291412,generator,solar,solar,0.036,36 kW,unknown,45.55298840000004,9.391122300000019
+310291415,generator_310291415,generator,solar,solar,0.003,3 kW,unknown,45.550145400000055,9.393330000000025
+310291416,generator_310291416,generator,solar,solar,0.018,18 kW,unknown,45.55427010000006,9.391694400000029
+350970518,Centrale Elettrica Carlo Esterle,plant,hydro,hydro,23.0,23 MW,Edison,45.653696900000774,9.48221069999996
+374578442,"Centrale ""Carlo Bobbio""",plant,hydro,hydro,82.0,82 MW,Enel Green Power,45.09366810000053,9.90438879999999
+374578581,"Centrale idroelettrica di Isola Serafini ""Carlo Bobbio""",generator,hydro,hydro,50.0,50 MW,Enel Green Power,45.09121030000012,9.905923100000026
+384166024,Centrale Roncovalgrande,plant,hydro,hydro,1040.0,1040 MW,Enel Produzione,46.07046240000025,8.731047499999978
+402312127,Centrale di Bertonico-Turano Lodigiano,plant,gas,CCGT,800.0,800 MW,Sorgenia,45.22658800000228,9.6402216
+422204909,Centrale idroelettrica di Ardenno,plant,hydro,hydro,56.0,56 MW,Enel,46.16985450000003,9.647405299999987
+429089794,Centrale Elettrica Angelo Bertini,plant,hydro,hydro,11.0,11 MW,Edison,45.66599650000076,9.484356199999963
+511754524,Centrale Idroelettrica Povo,generator,hydro,hydro,4.0,4 MW,Enel,45.99798929999991,10.077994800000033
+517784375,generator_517784375,generator,solar,solar,1.0,1 MW,unknown,45.313524600000015,10.171008499999987
+517784376,generator_517784376,generator,solar,solar,1.0,1 MW,unknown,45.314808800000016,10.182581199999987
+551474110,Impianto di Digestione Anaerobica e Biogas - Econord,plant,biomass,biomass,1.0,1 MW,Econord,45.665465099999984,8.935495399999999
+565956540,Centrale Delebio,plant,hydro,hydro,1.5,1500 kW,Carcano Antonio S.p.A.,46.131020100000015,9.463140499999996
+602564785,Centrale idroelettrica di Mantelera,plant,hydro,hydro,0.01092,10.920 kW,Eusebio Energia S.p.A.,45.92037600000004,10.337849099999973
+605218339,Campo fotovoltaico EOS2,generator,solar,solar,49.28,49.28 MW,CEM Ambiente,45.587083599999744,9.432752100000048
+627448063,Impianto Idroelettrico di Gardone Val Trompia,plant,hydro,hydro,0.64,640 kW,Energia Blu S.c.r.l.,45.68252300000008,10.18959149999998
+627449595,Impianto Idroelettrico La Bresciana,plant,hydro,hydro,0.24859,248.59 kW,Beretta Holding S.p.A.,45.698570600000295,10.197280699999997
+627571832,Centrale idroelettrica La Rocca,plant,hydro,hydro,2.14723,2147.23 kW,Sistemi di Energia S.p.A.,45.94183389999999,10.224693400000005
+628661454,Centrale Idroelettrica Sarezzo 1,plant,hydro,hydro,0.4,400 kW,Sair S.r.l.,45.66229370000021,10.194996799999998
+628661455,Centrale Idroelettrica Sarezzo 2,plant,hydro,hydro,0.4,400 kW,Sair S.r.l.,45.658862900000216,10.195115199999998
+628661456,Centrale Idroelettrica Sarezzo 3,plant,hydro,hydro,0.4,400 kW,Sair S.r.l.,45.65567660000022,10.196708899999999
+630016191,Centrale Idroelettrica di Lanico,plant,hydro,hydro,1.864,1864 kW,unknown,45.95265429999982,10.2761137
+664243668,Centrale idroelettrica di Sondrio,plant,hydro,hydro,146.8,146.8 MW,Enel S.p.A.,46.173686799999864,9.88750100000003
+667722860,generator_667722860,generator,biogas,biogas,1.0,1 MW,unknown,45.60969929999993,9.76282830000002
+670213094,Centrale Idrolettrica di Rovedolo,plant,hydro,hydro,0.13453,134.53 kW,Ghidini Trafilerie S.p.A.,45.69758789999989,10.189398499999989
+685319260,Centrale idroelettrica di Ponte dell'Acqua,plant,hydro,hydro,1.9,1.9 MW,Italgen,46.032408900000064,9.648390599999999
+813889921,Centrale idroelettrica di Carona,plant,hydro,hydro,48.0,48 MW,unknown,46.02235709999973,9.79070640000003
+866352065,Centrale di San Fiorano,plant,hydro,hydro,568.0,568,unknown,46.0522029,10.3647384
+958068550,generator_958068550,generator,solar,solar,0.0035,3.5 kW,unknown,45.71573550000023,8.641305900000079
+958068551,generator_958068551,generator,solar,solar,0.004,4 kW,unknown,45.715730300000224,8.641201900000079
+977068834,Centrale idroelettrica Monastero,plant,hydro,hydro,41.0,41 MW,unknown,46.153548200000024,9.439846700000015
+1030939997,"Centrale Idroelettrica ""Carcente"" Torrente Greno",plant,hydro,hydro,48.0,"48,91 kW",Greno Power,46.061112499999986,9.238830700000047
+1050199255,generator_1050199255,generator,unknown,other,6.0,6 MW,unknown,45.35236859999992,9.671610599999994
+1117585416,Centrale idroelettrica Albini,plant,hydro,hydro,6.0,"6,3 MW",unknown,45.96664919999966,9.926183200000088
+1149885801,generator_1149885801,generator,solar,solar,0.004,4 kW,unknown,45.71575849999978,8.641169400000027
+1191662951,Centrale Edison di Sonico Adolfo Covi,plant,hydro,hydro,60.0,60 MW,Edison S.p.A.,46.170914400000015,10.347678500000013
+1209265369,plant_1209265369,plant,gas,CCGT,88.0,88 MW,unknown,45.4664722999999,8.845971100000003
+1300101532,Microcentrale idroelettrica Enel Torrente Marianna,plant,hydro,hydro,0.8,0.8,Enel,45.90949739999989,8.718618199999954
+1301279732,Centrale Idroelettrica - Braone,plant,hydro,hydro,0.9,0.9MW,Enel Green Power,45.99112730000015,10.342230999999975
+1378405471,Serre Tavazzano BESS,plant,battery,other,50.0,50 MW,Enel Green Power,45.33391489999988,9.426411199999965
+1378407423,La Casella BESS,plant,battery,other,70.0,70 MW,Enel Green Power,45.0905661999999,9.486317999999967
+1380222755,Centrale Idroelettrica A2A di San Pietro Sovera,generator,hydro,hydro,0.003,3 kW,A2A,46.04627280000019,9.143435800000011
+1452583396,generator_1452583396,generator,solar,solar,1.0,1 MW,unknown,45.623159800000025,9.884317800000122
+1452583397,generator_1452583397,generator,solar,solar,4.2,4.2 MW,unknown,45.62254410000003,9.882228200000121
+1461927694,generator_1461927694,generator,hydro,hydro,0.002,2 kW,IdroFerrera,45.93568500000022,8.78823159999999
+1461927722,plant_1461927722,plant,hydro,hydro,2.0,2 MW,Enel,45.93491980000022,8.786634399999974
+1461927727,Bacino Idrico IdroFerrera,plant,hydro,hydro,2.0,2 MW,Enel,45.93529480000022,8.78704989999999
+1461935044,Centrale Idroelettrica di Ferrera di Varese,plant,hydro,hydro,2.0,2 MW,Enel,45.932814700000264,8.790759799999982
+1461935049,plant_1461935049,plant,hydro,hydro,2.0,2 MW,Enel,45.93372430000027,8.790389799999993
+1461935062,Idroferrera SRL,plant,hydro,hydro,2.0,2 MW,Enel,45.935298200000275,8.781147699999991

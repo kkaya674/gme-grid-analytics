@@ -1,0 +1,12 @@
+Line,bus0,bus1,type,x,r,g,b,s_nom,s_nom_mod,s_nom_extendable,s_nom_min,s_nom_max,s_max_pu,capital_cost,active,build_year,lifetime,length,carrier,terrain_factor,num_parallel,v_ang_min,v_ang_max,sub_network,x_pu,r_pu,g_pu,b_pu,x_pu_eff,r_pu_eff,s_nom_opt
+NORD-CNOR,NORD,CNOR,,0.005,0.0005,0.0,0.0,4500.0,0.0,False,0.0,inf,1.0,0.0,True,0,inf,1.0,,1.0,1.0,-inf,inf,,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+CNOR-CSUD,CNOR,CSUD,,0.006,0.0006,0.0,0.0,3200.0,0.0,False,0.0,inf,1.0,0.0,True,0,inf,1.0,,1.0,1.0,-inf,inf,,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+CSUD-SUD,CSUD,SUD,,0.005,0.0005,0.0,0.0,4200.0,0.0,False,0.0,inf,1.0,0.0,True,0,inf,1.0,,1.0,1.0,-inf,inf,,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+SUD-CALA,SUD,CALA,,0.007,0.0007,0.0,0.0,2500.0,0.0,False,0.0,inf,1.0,0.0,True,0,inf,1.0,,1.0,1.0,-inf,inf,,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+CALA-SICI,CALA,SICI,,0.02,0.002,0.0,0.0,1200.0,0.0,False,0.0,inf,1.0,0.0,True,0,inf,1.0,,1.0,1.0,-inf,inf,,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+CSUD-SARD,CSUD,SARD,,0.03,0.003,0.0,0.0,1000.0,0.0,False,0.0,inf,1.0,0.0,True,0,inf,1.0,,1.0,1.0,-inf,inf,,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+Milano-NORD,Milano,NORD,,0.001,0.0001,0.0,0.0,8000.0,0.0,False,0.0,inf,1.0,0.0,True,0,inf,1.0,,1.0,1.0,-inf,inf,,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+Roma-CSUD,Roma,CSUD,,0.002,0.0002,0.0,0.0,5000.0,0.0,False,0.0,inf,1.0,0.0,True,0,inf,1.0,,1.0,1.0,-inf,inf,,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+Napoli-SUD,Napoli,SUD,,0.002,0.0002,0.0,0.0,4000.0,0.0,False,0.0,inf,1.0,0.0,True,0,inf,1.0,,1.0,1.0,-inf,inf,,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+NORD-CSUD,NORD,CSUD,,0.015,0.0015,0.0,0.0,1500.0,0.0,False,0.0,inf,1.0,0.0,True,0,inf,1.0,,1.0,1.0,-inf,inf,,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+SUD-SICI,SUD,SICI,,0.025,0.0025,0.0,0.0,800.0,0.0,False,0.0,inf,1.0,0.0,True,0,inf,1.0,,1.0,1.0,-inf,inf,,0.0,0.0,0.0,0.0,0.0,0.0,0.0

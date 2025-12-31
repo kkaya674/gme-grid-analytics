@@ -1,0 +1,6 @@
+StorageUnit,bus,control,type,p_nom,p_nom_mod,p_nom_extendable,p_nom_min,p_nom_max,p_min_pu,p_max_pu,p_set,q_set,sign,carrier,spill_cost,marginal_cost,marginal_cost_quadratic,marginal_cost_storage,capital_cost,active,build_year,lifetime,state_of_charge_initial,state_of_charge_initial_per_period,state_of_charge_set,cyclic_state_of_charge,cyclic_state_of_charge_per_period,max_hours,efficiency_store,efficiency_dispatch,standing_loss,inflow,p_nom_opt
+our_bess,Roma,PQ,,200.0,0.0,False,0.0,inf,-1.0,1.0,0.0,0.0,1.0,battery,0.0,1.0,0.0,0.0,0.0,True,0,inf,0.0,False,,False,True,4.0,0.95,0.95,0.0,0.0,0.0
+other_bess_Milano,Milano,PQ,,150.0,0.0,False,0.0,inf,-1.0,1.0,0.0,0.0,1.0,battery,0.0,2.0,0.0,0.0,0.0,True,0,inf,0.0,False,,True,True,4.0,0.95,0.95,0.0,0.0,0.0
+other_bess_Napoli,Napoli,PQ,,100.0,0.0,False,0.0,inf,-1.0,1.0,0.0,0.0,1.0,battery,0.0,2.0,0.0,0.0,0.0,True,0,inf,0.0,False,,True,True,4.0,0.95,0.95,0.0,0.0,0.0
+other_bess_SICI,SICI,PQ,,200.0,0.0,False,0.0,inf,-1.0,1.0,0.0,0.0,1.0,battery,0.0,2.0,0.0,0.0,0.0,True,0,inf,0.0,False,,True,True,4.0,0.95,0.95,0.0,0.0,0.0
+other_bess_SARD,SARD,PQ,,150.0,0.0,False,0.0,inf,-1.0,1.0,0.0,0.0,1.0,battery,0.0,2.0,0.0,0.0,0.0,True,0,inf,0.0,False,,True,True,4.0,0.95,0.95,0.0,0.0,0.0

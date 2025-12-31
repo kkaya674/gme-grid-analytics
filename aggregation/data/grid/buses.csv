@@ -1,0 +1,11 @@
+Bus,v_nom,type,x,y,carrier,unit,location,v_mag_pu_set,v_mag_pu_min,v_mag_pu_max,control,generator,sub_network
+NORD,380.0,,10.0,45.0,AC,,,1.0,0.0,inf,PQ,,
+CNOR,380.0,,11.5,43.5,AC,,,1.0,0.0,inf,PQ,,
+CSUD,380.0,,13.5,41.5,AC,,,1.0,0.0,inf,PQ,,
+SUD,380.0,,16.5,40.5,AC,,,1.0,0.0,inf,PQ,,
+CALA,380.0,,16.2,39.0,AC,,,1.0,0.0,inf,PQ,,
+SICI,380.0,,14.0,37.5,AC,,,1.0,0.0,inf,PQ,,
+SARD,380.0,,9.0,40.0,AC,,,1.0,0.0,inf,PQ,,
+Milano,380.0,,9.19,45.46,AC,,,1.0,0.0,inf,PQ,,
+Roma,380.0,,12.5,41.89,AC,,,1.0,0.0,inf,PQ,,
+Napoli,380.0,,14.26,40.85,AC,,,1.0,0.0,inf,PQ,,
