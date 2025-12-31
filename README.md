@@ -1,5 +1,8 @@
 # GME Market Visualization & Analysis Pipeline
 
+> [!IMPORTANT]
+> **Information**: This is a personal development project. It has no official affiliation with GME (Gestore dei Mercati Energetici).
+
 Python pipeline for analyzing Italian electricity markets (GME) with PyPSA-Eur network topology.
 
 ## Features
@@ -200,3 +203,9 @@ All visualizations saved to `analysis/`:
 ## License
 
 MIT
+
+---
+
+> [!CAUTION]
+> ### Disclaimer
+> This software is provided "as is" for educational and analytical purposes. The authors cannot be held responsible for the accuracy or timeliness of the data, or for any consequences arising from commercial or operational decisions made using this tool. Users are responsible for complying with GME's data usage terms and conditions.
