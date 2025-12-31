@@ -38,24 +38,32 @@ def main():
         success = client.fetch_and_save_csv("ME_TransmissionLimits", "MGP", target_date, target_date)
         if success:
             print(f"  [SUCCESS] MGP Transmission Limits saved to data/")
+        else:
+            print(f"  [FAILED] Could not fetch MGP Transmission Limits.")
 
         # 3. Fetch and Save MB Zonal Prices
         print(f"Fetching MB Zonal Prices...")
         success = client.fetch_and_save_csv("ME_ZonalPrices", "MB", target_date, target_date)
         if success:
             print(f"  [SUCCESS] MB Zonal Prices saved to data/")
+        else:
+            print(f"  [FAILED] Could not fetch MB Zonal Prices.")
 
         # 4. Fetch and Save MSD Zonal Prices
         print(f"Fetching MSD Zonal Prices...")
         success = client.fetch_and_save_csv("ME_ZonalPrices", "MSD", target_date, target_date)
         if success:
             print(f"  [SUCCESS] MSD Zonal Prices saved to data/")
+        else:
+            print(f"  [FAILED] Could not fetch MSD Zonal Prices.")
 
         # 5. Fetch and Save MGP Transit Flows
         print(f"Fetching MGP Transit Flows...")
         success = client.fetch_and_save_csv("ME_Transits", "MGP", target_date, target_date)
         if success:
             print(f"  [SUCCESS] MGP Transit Flows saved to data/")
+        else:
+            print(f"  [FAILED] Could not fetch MGP Transit Flows.")
 
         # 6. Check Quotas
         quotas = client.get_my_quotas()
@@ -64,3 +72,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+```
