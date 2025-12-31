@@ -56,21 +56,21 @@ def main():
         else:
             print(f"  [FAILED] Could not fetch MGP Transmission Limits.")
 
-        # 3. Fetch and Save MB Zonal Prices
-        print(f"Fetching MB Zonal Prices...")
-        success = client.fetch_and_save_csv("ME_ZonalPrices", "MB", target_date, target_date)
+        # 3. Fetch and Save MB Results
+        print(f"Fetching MB Results...")
+        success = client.fetch_and_save_csv("ME_MBResults", "MB", target_date, target_date)
         if success:
-            print(f"  [SUCCESS] MB Zonal Prices saved to data/")
+            print(f"  [SUCCESS] MB Results saved to data/")
         else:
-            print(f"  [FAILED] Could not fetch MB Zonal Prices.")
+            print(f"  [FAILED] Could not fetch MB Results.")
 
-        # 4. Fetch and Save MSD Zonal Prices
-        print(f"Fetching MSD Zonal Prices...")
-        success = client.fetch_and_save_csv("ME_ZonalPrices", "MSD", target_date, target_date)
+        # 4. Fetch and Save MSD Results
+        print(f"Fetching MSD Results...")
+        success = client.fetch_and_save_csv("ME_MSDExAnteResults", "MSD", target_date, target_date)
         if success:
-            print(f"  [SUCCESS] MSD Zonal Prices saved to data/")
+            print(f"  [SUCCESS] MSD Results saved to data/")
         else:
-            print(f"  [FAILED] Could not fetch MSD Zonal Prices.")
+            print(f"  [FAILED] Could not fetch MSD Results.")
 
         # 5. Fetch and Save MGP Transit Flows
         print(f"Fetching MGP Transit Flows...")
