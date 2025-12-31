@@ -21,27 +21,118 @@ def parse_gme_response(result, market_type):
             for item in result:
                 if isinstance(item, dict):
                     zone = item.get('Zone', item.get('Zona', ''))
-                    if zone == 'PUN':
-                        normalized_item = {
-                            'date': item.get('FlowDate', item.get('date', '')),
-                            'interval': int(item.get('Hour', item.get('hour', item.get('interval', 1)))),
-                            'price': float(item.get('Price', item.get('price', 0))),
-                            'zone': zone
-                        }
-                        parsed_data.append(normalized_item)
+                    flow_date = item.get('FlowDate', item.get('date', ''))
+                    hour = item.get('Hour', item.get('hour', item.get('interval', 1)))
+                    period = item.get('Period', '')
+                    price = item.get('Price', item.get('price', 0))
+                    
+                    volumes_purchased = item.get('VolumesPurchased', item.get('Purchased', 0))
+                    volumes_sold = item.get('VolumesSold', item.get('Sold', 0))
+                    
+                    avg_purchase_price = item.get('AveragePurchasingPrice', 0)
+                    avg_selling_price = item.get('AverageSellingPrice', 0)
+                    min_purchase_price = item.get('MinimumPurchasingPrice', 0)
+                    max_selling_price = item.get('MaximumSellingPrice', 0)
+                    
+                    if flow_date and isinstance(flow_date, int):
+                        flow_date = str(flow_date)
+                        if len(flow_date) == 8:
+                            flow_date = f"{flow_date[0:4]}-{flow_date[4:6]}-{flow_date[6:8]}"
+                    
+                    display_price = price
+                    if not price and avg_purchase_price:
+                        display_price = avg_purchase_price
+                    elif not price and avg_selling_price:
+                        display_price = avg_selling_price
+                    elif not price and min_purchase_price:
+                        display_price = min_purchase_price
+                    elif not price and max_selling_price:
+                        display_price = max_selling_price
+                    
+                    total_volume = 0
+                    if volumes_purchased:
+                        total_volume = volumes_purchased
+                    if volumes_sold and volumes_sold > total_volume:
+                        total_volume = volumes_sold
+                    
+                    if display_price or total_volume:
+                        try:
+                            price_val = float(display_price) if display_price and display_price != 'null' and display_price != '' else 0
+                            volume_val = float(total_volume) if total_volume and total_volume != 'null' and total_volume != '' else 0
+                            
+                            normalized_item = {
+                                'date': flow_date if flow_date else item.get('Date', ''),
+                                'interval': int(hour) if hour else 1,
+                                'period': period,
+                                'price': price_val,
+                                'volume': volume_val,
+                                'zone': zone if zone else 'National'
+                            }
+                            parsed_data.append(normalized_item)
+                        except (ValueError, TypeError) as e:
+                            logger.warning(f"Skipping item due to conversion error: {e}, item: {item}")
+                            continue
         
         elif market_type == 'gas':
             for item in result:
                 if isinstance(item, dict):
+                    flow_date = item.get('FlowDate', item.get('date', ''))
+                    product = item.get('Product', '')
+                    
+                    if flow_date and isinstance(flow_date, int):
+                        flow_date = str(flow_date)
+                        if len(flow_date) == 8:
+                            flow_date = f"{flow_date[0:4]}-{flow_date[4:6]}-{flow_date[6:8]}"
+                    try:
+                        price_val = float(avg_price) if avg_price and avg_price != 'null' and avg_price != '' else 0
+                        volume_val = float(mwh_volumes) if mwh_volumes and mwh_volumes != 'null' and mwh_volumes != '' else (float(mw_volumes) if mw_volumes and mw_volumes != 'null' and mw_volumes != '' else 0)
+                        
+                        normalized_item = {
+                            'date': flow_date if flow_date else item.get('Date', ''),
+                            'product': product,
+                            'price': price_val,
+                            'volume': volume_val
+                        }
+                        parsed_data.append(normalized_item)
+                    except (ValueError, TypeError) as e:
+                        logger.warning(f"Skipping gas item due to conversion error: {e}")
+                        continue
                     normalized_item = {
-                        'date': item.get('FlowDate', item.get('date', '')),
-                        'interval': int(item.get('Hour', item.get('hour', item.get('interval', 1)))),
-                        'price': float(item.get('Price', item.get('price', 0)))
+                        'date': flow_date if flow_date else item.get('Date', ''),
+                        'product': product,
+                        'price': float(avg_price) if avg_price else 0,
+                        'volume': float(mwh_volumes) if mwh_volumes else float(mw_volumes) if mw_volumes else 0
                     }
                     parsed_data.append(normalized_item)
         
         elif market_type == 'environmental':
-            parsed_data = result
+            for item in result:
+                if isinstance(item, dict):
+                    date_val = item.get('Date', item.get('FlowDate', ''))
+                    type_val = item.get('Type', '')
+                    ref_price = item.get('ReferencePrice', item.get('WeightedAveragePrice', 
+                                        item.get('Price', 0)))
+                    try:
+                        price_val = float(ref_price) if ref_price and ref_price != 'null' and ref_price != '' else 0
+                        volume_val = float(volumes) if volumes and volumes != 'null' and volumes != '' else 0
+                        
+                        normalized_item = {
+                            'date': date_val,
+                            'type': type_val,
+                            'price': price_val,
+                            'volume': volume_val
+                        }
+                        parsed_data.append(normalized_item)
+                    except (ValueError, TypeError) as e:
+                        logger.warning(f"Skipping environmental item due to conversion error: {e}")
+                        continue
+                    normalized_item = {
+                        'date': date_val,
+                        'type': type_val,
+                        'price': float(ref_price) if ref_price else 0,
+                        'volume': float(volumes) if volumes else 0
+                    }
+                    parsed_data.append(normalized_item)
         
         return parsed_data
     
@@ -55,6 +146,13 @@ def parse_gme_response(result, market_type):
         
         if 'Results' in result:
             return parse_gme_response(result['Results'], market_type)
+        
+        if 'Data' in result:
+            return parse_gme_response(result['Data'], market_type)
+        
+        for key in result.keys():
+            if isinstance(result[key], list) and len(result[key]) > 0:
+                return parse_gme_response(result[key], market_type)
         
         return parsed_data
     
@@ -81,14 +179,15 @@ def get_markets():
         return jsonify({
             "electricity": [
                 {"id": "MGP", "name": "MGP - Day-Ahead Market"},
-                {"id": "MI1", "name": "MI1 - First Intraday Session"},
-                {"id": "MI2", "name": "MI2 - Second Intraday Session"},
-                {"id": "MI3", "name": "MI3 - Third Intraday Session"},
-                {"id": "MI4", "name": "MI4 - Fourth Intraday Session"},
-                {"id": "MI5", "name": "MI5 - Fifth Intraday Session"},
-                {"id": "MI6", "name": "MI6 - Sixth Intraday Session"},
-                {"id": "MI7", "name": "MI7 - Seventh Intraday Session"},
-                {"id": "MPEG", "name": "MPEG - Platform for Physical Delivery"}
+                {"id": "MI1", "name": "MI1 - Intraday Session 1"},
+                {"id": "MI2", "name": "MI2 - Intraday Session 2"},
+                {"id": "MI3", "name": "MI3 - Intraday Session 3"},
+                {"id": "MI4", "name": "MI4 - Intraday Session 4"},
+                {"id": "MI5", "name": "MI5 - Intraday Session 5"},
+                {"id": "MI6", "name": "MI6 - Intraday Session 6"},
+                {"id": "MI7", "name": "MI7 - Intraday Session 7"},
+                {"id": "MSD", "name": "MSD - Ancillary Services Market"},
+                {"id": "MB", "name": "MB - Balancing Market"}
             ],
             "gas": [
                 {"id": "MGP-GAS", "name": "MGP-GAS - Day-Ahead Gas Market"},
@@ -142,7 +241,12 @@ def get_price_data():
             result = None
             try:
                 if market_type == 'electricity':
-                    result = client.get_electricity_prices(market, current_date)
+                    if market == 'MB':
+                        result = client.get_mb_results(current_date)
+                    elif market == 'MSD':
+                        result = client.get_electricity_prices(market, current_date)
+                    else:
+                        result = client.get_electricity_prices(market, current_date)
                 elif market_type == 'gas':
                     result = client.get_gas_prices(market, current_date)
                 elif market_type == 'environmental':
@@ -157,7 +261,8 @@ def get_price_data():
                 if parsed_result and isinstance(parsed_result, list):
                     for item in parsed_result:
                         if isinstance(item, dict):
-                            item['date'] = current_date.strftime("%Y-%m-%d")
+                            if 'date' not in item or not item['date']:
+                                item['date'] = current_date.strftime("%Y-%m-%d")
                     all_results.extend(parsed_result)
             except Exception as date_error:
                 logger.warning(f"Error fetching data for {current_date}: {str(date_error)}")

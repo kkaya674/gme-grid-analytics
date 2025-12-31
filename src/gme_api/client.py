@@ -149,28 +149,52 @@ class GMEClient:
     # Electricity Market (MPE)
     def get_electricity_prices(self, market: str, date_obj: date) -> Optional[Dict[str, Any]]:
         """
-        Fetch electricity prices (e.g., PUN) for a specific market and date.
-        Markets: MGP (Day-Ahead), MI (Intra-Day), MPEG
-        DataName: ME_ZonalPrices
+        Fetch electricity prices for a specific market and date.
+        Markets: MGP, MI-A1, MI-A2, MI-A3, MI1-MI7, MSD, MB
         """
-        return self._get_data(market, "ME_ZonalPrices", date_obj)
+        segment = market
+        
+        if market == 'MGP':
+            data_name = "ME_ZonalPrices"
+        elif market in ['MI1', 'MI2', 'MI3']:
+            data_name = "ME_ZonalPrices"
+            segment = f"MI-A{market[2]}"
+        elif market in ['MI4', 'MI5', 'MI6', 'MI7']:
+            data_name = "ME_ZonalPrices"
+            segment = market
+        elif market == 'MSD':
+            data_name = "ME_MSDExAnteResults"
+        elif market == 'MB':
+            data_name = "ME_MBResults"
+        else:
+            data_name = "ME_ZonalPrices"
+        
+        return self._get_data(segment, data_name, date_obj)
 
     def get_electricity_volumes(self, market: str, date_obj: date) -> Optional[Dict[str, Any]]:
         """
         Fetch electricity volumes for a specific market and date.
         DataName: ME_ZonalVolumes
         """
-        return self._get_data(market, "ME_ZonalVolumes", date_obj)
+        segment = market
+        
+        if market in ['MI1', 'MI2', 'MI3']:
+            segment = f"MI-A{market[2]}"
+        
+        return self._get_data(segment, "ME_ZonalVolumes", date_obj)
 
     # Gas Market (MGAS)
     def get_gas_prices(self, market: str, date_obj: date) -> Optional[Dict[str, Any]]:
         """
         Fetch gas prices for a specific market and date.
-        Markets: MGP-GAS, MI-GAS, MGS (Storage)
+        Markets: MGP-GAS, MI-GAS, MI-GAS1, MI-GAS2, MI-GAS3, MGS (Storage)
         DataName: GAS_ContinuousTrading (for continuous markets)
         """
-        # Note: The manual mentions GAS_ContinuousTrading for MGP-GAS, MI-GAS
-        return self._get_data(market, "GAS_ContinuousTrading", date_obj)
+        segment = market
+        if market in ['MI-GAS1', 'MI-GAS2', 'MI-GAS3']:
+            segment = 'MI-GAS'
+        
+        return self._get_data(segment, "GAS_ContinuousTrading", date_obj)
 
     def get_gas_volumes(self, market: str, date_obj: date) -> Optional[Dict[str, Any]]:
         """
@@ -183,9 +207,23 @@ class GMEClient:
     def get_environmental_data(self, market: str, date_obj: date) -> Optional[Dict[str, Any]]:
         """
         Fetch data for environmental markets.
-        Markets: TEE (Energy Efficiency Certificates), GO (Guarantees of Origin)
+        Markets: TEE (Energy Efficiency Certificates), GO (Guarantees of Origin), CV
         DataName: ENV_Results (Generic results) or ENV_AuctionResults
         """
         return self._get_data(market, "ENV_Results", date_obj)
+
+    def get_msd_ex_post(self, date_obj: date) -> Optional[Dict[str, Any]]:
+        """
+        Fetch MSD ex-post market results (Balancing Market - MB).
+        DataName: ME_MSDExPostResults
+        """
+        return self._get_data("MSD", "ME_MSDExPostResults", date_obj)
+
+    def get_mb_results(self, date_obj: date) -> Optional[Dict[str, Any]]:
+        """
+        Fetch MB (Balancing Market) results.
+        DataName: ME_MBResults
+        """
+        return self._get_data("MB", "ME_MBResults", date_obj)
 
 

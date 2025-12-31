@@ -127,23 +127,30 @@ function processAndRenderData(rawData) {
     }
     
     const normalized = rawData.map(item => {
-        const keys = Object.keys(item);
-        const dateKey = keys.find(k => /date|data/i.test(k));
-        const intervalKey = keys.find(k => /hour|interval|ora/i.test(k));
-        const priceKey = keys.find(k => /price|pun|prezzo/i.test(k));
-        const volumeKey = keys.find(k => /volume|quantit/i.test(k));
+        const dateVal = item.date || item.FlowDate || item.Date || '';
+        const intervalVal = item.interval || item.Hour || item.hour || 1;
+        const priceVal = item.price || item.Price || 0;
+        const volumeVal = item.volume || item.Volume || item.Purchased || item.Sold || 0;
+        const periodVal = item.period || item.Period || '';
+        const zoneVal = item.zone || item.Zone || '';
+        const productVal = item.product || item.Product || '';
+        const typeVal = item.type || item.Type || '';
         
-        let intervalValue = item[intervalKey] || item.interval || item.hour;
-        if (typeof intervalValue === 'string') {
-            intervalValue = parseInt(intervalValue.replace(/\D/g, '')) || 1;
+        let displayInterval = intervalVal;
+        if (typeof displayInterval === 'string') {
+            displayInterval = parseInt(displayInterval.replace(/\D/g, '')) || 1;
         }
-        intervalValue = parseInt(intervalValue) || 1;
+        displayInterval = parseInt(displayInterval) || 1;
         
         return {
-            date: item[dateKey] || item.date,
-            interval: intervalValue,
-            price: parseFloat(item[priceKey] || item.price || 0),
-            volume: parseFloat(item[volumeKey] || item.volume || 0),
+            date: dateVal,
+            interval: displayInterval,
+            period: periodVal,
+            price: parseFloat(priceVal) || 0,
+            volume: parseFloat(volumeVal) || 0,
+            zone: zoneVal,
+            product: productVal,
+            category: typeVal,
             type: 'actual'
         };
     });
@@ -284,11 +291,27 @@ function renderTable() {
             ? '<span class="forecast-badge">Forecast</span>' 
             : 'Actual';
         
+        let hourDisplay = d.interval || '-';
+        if (d.period) {
+            hourDisplay = `${d.interval} (P${d.period})`;
+        }
+        
+        let additionalInfo = '';
+        if (d.zone && d.zone !== 'PUN') {
+            additionalInfo = ` - ${d.zone}`;
+        }
+        if (d.product) {
+            additionalInfo = ` - ${d.product}`;
+        }
+        if (d.category) {
+            additionalInfo += ` (${d.category})`;
+        }
+        
         return `
             <tr>
                 <td>${d.date}</td>
-                <td>${d.interval || '-'}</td>
-                <td>€${d.price.toFixed(2)}</td>
+                <td>${hourDisplay}</td>
+                <td>€${d.price.toFixed(2)}${additionalInfo}</td>
                 <td>${d.volume ? d.volume.toFixed(2) : '-'} MWh</td>
                 <td>${typeLabel}</td>
             </tr>
