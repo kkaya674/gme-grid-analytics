@@ -24,7 +24,29 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-### 2. Configure GME Credentials
+### 2. Docker Setup (Alternative)
+
+If you prefer using Docker, you can run the pipeline without installing local dependencies:
+
+```bash
+# Build the image
+docker compose build
+
+# Fetch data for a specific date
+docker compose run app python main.py --date 2025-12-30
+
+# Run congestion analysis
+docker compose run app python analyze_congestion.py --date 2025-12-30
+```
+
+### 3. VS Code Dev Containers
+
+This project is configured for [VS Code Dev Containers](https://code.visualstudio.com/docs/devcontainers/containers). 
+1. Open the project in VS Code.
+2. Click **"Reopen in Container"** when prompted, or use the Command Palette (`Ctrl+Shift+P`) and select `Dev Containers: Reopen in Container`.
+3. The environment will be automatically set up with all dependencies and recommended extensions.
+
+### 4. Configure GME Credentials
 
 Create `.env` file with your GME API credentials:
 
