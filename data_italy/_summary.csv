@@ -1,0 +1,11 @@
+file,rows,columns,size_kb
+demand_daily.csv,365,4,23.5634765625
+demand_hourly.csv,8760,2,327.162109375
+demand_monthly.csv,12,4,0.7978515625
+generators_all.csv,97638,9,7185.2685546875
+generators_with_capacity.csv,1681,9,143.7607421875
+hydro_annual_all.csv,233,1,1.001953125
+lines.csv,20923,11,2132.45703125
+lines_transmission.csv,14642,11,1532.787109375
+substations.csv,38715,7,2712.189453125
+technology_costs.csv,203,8,15.9814453125

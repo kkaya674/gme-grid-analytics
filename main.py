@@ -33,11 +33,13 @@ def main():
         else:
             print(f"  [FAILED] Could not fetch MGP data. Check credentials or API availability.")
 
-        # 2. Fetch and Save MSD Ex-Ante Results (As requested)
-        print(f"Fetching MSD Ex-Ante Results...")
-        success = client.fetch_and_save_csv("ME_MSDExAnteResults", "MSD", target_date, target_date)
+        # 2. Fetch and Save MGP Transmission Limits
+        print(f"Fetching MGP Transmission Limits...")
+        success = client.fetch_and_save_csv("ME_TransmissionLimits", "MGP", target_date, target_date)
         if success:
-            print(f"  [SUCCESS] MSD Ex-Ante saved to data/")
+            print(f"  [SUCCESS] MGP Transmission Limits saved to data/")
+
+        # 3. Fetch and Save MSD Ex-Ante Results
         else:
             print(f"  [FAILED] Could not fetch MSD data.")
 

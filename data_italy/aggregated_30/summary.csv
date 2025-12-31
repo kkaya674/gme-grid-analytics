@@ -1,0 +1,2 @@
+n_buses,n_lines,n_generators,total_gen_capacity_mw,total_line_capacity_mw,peak_demand_mw
+30,101,139,80986.79617,488300.0,49418.446116391926

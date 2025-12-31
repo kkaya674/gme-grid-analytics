@@ -4,6 +4,8 @@ import matplotlib.pyplot as plt
 import cartopy.crs as ccrs
 import os
 import cartopy.feature as cfeature
+import ssl
+ssl._create_default_https_context = ssl._create_unverified_context
 
 def plot_mgp_data(network_path, price_csv, limit_csv, hour=12):
     print(f"Loading zonal network from {network_path}...")
@@ -13,8 +15,8 @@ def plot_mgp_data(network_path, price_csv, limit_csv, hour=12):
     try:
         prices_df = pd.read_csv(price_csv)
         # GME data might have spaces or mixed case
-        prices_df.columns = [c.strip() for c in prices_df.columns]
-        h_prices = prices_df[prices_df['Hour'] == hour].set_index('Zone')['Price']
+        prices_df.columns = [c.strip().lower() for c in prices_df.columns]
+        h_prices = prices_df[prices_df['hour'] == hour].set_index('zone')['price']
         print(f"Found {len(h_prices)} zonal prices.")
     except Exception as e:
         print(f"Error processing prices: {e}")
@@ -23,8 +25,8 @@ def plot_mgp_data(network_path, price_csv, limit_csv, hour=12):
     print(f"Loading MGP transmission limits from {limit_csv} for hour {hour}...")
     try:
         limits_df = pd.read_csv(limit_csv)
-        limits_df.columns = [c.strip() for c in limits_df.columns]
-        h_limits = limits_df[limits_df['Hour'] == hour]
+        limits_df.columns = [c.strip().lower() for c in limits_df.columns]
+        h_limits = limits_df[limits_df['hour'] == hour]
         print(f"Found {len(h_limits)} transmission limits.")
     except Exception as e:
         print(f"Error processing limits: {e}")
@@ -38,7 +40,7 @@ def plot_mgp_data(network_path, price_csv, limit_csv, hour=12):
         else:
             # Maybe map PUN to all IT zones if it's there
             if zone == 'PUN':
-                it_zones = ['NORD', 'CNOR', 'CSUD', 'SUD', 'SICI', 'SARD']
+                it_zones = ['NORD', 'CNOR', 'CSUD', 'SUD', 'CALA', 'SICI', 'SARD']
                 for itz in it_zones:
                     if itz in n.buses.index and n.buses.at[itz, 'marginal_price'] == 0:
                         n.buses.at[itz, 'marginal_price'] = price
@@ -49,15 +51,15 @@ def plot_mgp_data(network_path, price_csv, limit_csv, hour=12):
     n.lines['s_nom'] = 1.0 # Default fallback width
     
     for idx, row in h_limits.iterrows():
-        f_zone = str(row['From']).strip()
-        t_zone = str(row['To']).strip()
+        f_zone = str(row['from']).strip()
+        t_zone = str(row['to']).strip()
         
         # In PyPSA network, checks lines between these buses
         mask = ((n.lines.bus0 == f_zone) & (n.lines.bus1 == t_zone)) | \
                ((n.lines.bus0 == t_zone) & (n.lines.bus1 == f_zone))
         
         if mask.any():
-            cap = max(float(row['MaxTransmissionLimitFrom']), float(row['MaxTransmissionLimitTo']))
+            cap = max(float(row['maxtransmissionlimitfrom']), float(row['maxtransmissionlimitto']))
             n.lines.loc[mask, 's_nom'] = cap
             print(f"Line {f_zone}-{t_zone} capacity set to {cap} MW")
 
@@ -103,8 +105,8 @@ def plot_mgp_data(network_path, price_csv, limit_csv, hour=12):
 
 if __name__ == "__main__":
     base_dir = "/Users/kkaya674/Desktop/CodeSuite/gme_api"
-    network_path = os.path.join(base_dir, "data_zonal")
-    price_csv = os.path.join(base_dir, "data/MGP_ME_ZonalPrices_2024-12-30.csv")
-    limit_csv = os.path.join(base_dir, "data/MGP_ME_TransmissionLimits_2024-12-30.csv")
+    network_path = os.path.join(base_dir, "data_italy/zonal")
+    price_csv = os.path.join(base_dir, "data/MGP_ME_ZonalPrices_2025-12-30.csv")
+    limit_csv = os.path.join(base_dir, "data/MGP_ME_TransmissionLimits_2025-12-30.csv")
     
     plot_mgp_data(network_path, price_csv, limit_csv)
