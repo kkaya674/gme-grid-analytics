@@ -39,7 +39,7 @@ def main():
     
     # Find data file
     if args.date:
-        price_file = data_dir / f"{args.market}_ME_ZonalPrices_{args.date.replace('-', '')}.csv"
+        price_file = data_dir / f"{args.market}_ME_ZonalPrices_{args.date}.csv"
     else:
         price_file = get_latest_data_file(str(data_dir), args.market, "ME_ZonalPrices")
     

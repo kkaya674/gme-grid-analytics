@@ -138,12 +138,9 @@ def create_animation(network_path, price_csv, flow_csv, output_file='mgp_animati
         gl.right_labels = False
         
         try:
-            from pypsa.plot import plot_network
+            from pypsa.plot.maps.static import plot as plot_network
         except ImportError:
-            try:
-                from pypsa.plot.maps.static import plot_network
-            except ImportError:
-                from pypsa.plot import plot as plot_network
+            from pypsa.plot import plot as plot_network
         
         line_colors = plotter.network.lines.utilization.fillna(0)
         

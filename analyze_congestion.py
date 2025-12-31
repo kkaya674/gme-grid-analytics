@@ -14,7 +14,7 @@ import seaborn as sns
 from pathlib import Path
 import sys
 
-def analyze_congestion(flow_csv, price_csv, output_dir='analysis'):
+def analyze_congestion(flow_csv, price_csv, output_dir, date_str):
     """
     Analyze congestion patterns throughout the day.
     
@@ -22,6 +22,7 @@ def analyze_congestion(flow_csv, price_csv, output_dir='analysis'):
         flow_csv: Path to transit flow CSV
         price_csv: Path to zonal price CSV
         output_dir: Output directory for analysis results
+        date_str: Date for titles (YYYY-MM-DD)
     """
     print("=== GME Congestion Analysis ===\n")
     
