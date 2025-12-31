@@ -1,14 +1,11 @@
 """
 MSD/MB Balancing Market Analysis
 
-Analyze balancing market data (MSD ex-ante and MB results) to identify:
-- Balancing volumes and patterns
-- Price premiums over MGP
-- Zone-specific imbalances
-- Time-of-day balancing needs
+Comprehensive analysis of balancing markets with detailed price and volume visualizations.
 
 Usage:
     python analyze_balancing.py --date 2025-12-30
+    python analyze_balancing.py  # Uses yesterday by default
 """
 
 import argparse
@@ -17,207 +14,215 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 from pathlib import Path
+from datetime import date, timedelta
 
 sns.set_style("whitegrid")
 
+ITALIAN_ZONES = ['NORD', 'CNOR', 'CSUD', 'SUD', 'CALA', 'SICI', 'SARD']
 
-def analyze_msd(msd_file, mgp_file, output_dir, date_str):
-    """Analyze MSD ex-ante balancing data."""
+
+def analyze_market(market_name, market_file, mgp_file, output_dir, date_str):
+    """Comprehensive balancing market analysis with price and volume charts."""
     
-    print("\n=== MSD BALANCING ANALYSIS ===\n")
+    print(f"\n=== {market_name} BALANCING ANALYSIS ===\n")
     
     # Load data
-    msd = pd.read_csv(msd_file)
-    msd.columns = [c.lower() for c in msd.columns]
+    market_df = pd.read_csv(market_file)
+    market_df.columns = [c.lower() for c in market_df.columns]
     
     mgp = pd.read_csv(mgp_file)
     mgp.columns = [c.lower() for c in mgp.columns]
     
-    # Filter non-zero volumes
-    msd_active = msd[(msd['volumespurchased'] > 0) | (msd['volumessold'] > 0)].copy()
+    # Filter Italian zones
+    market_it = market_df[market_df['zone'].isin(ITALIAN_ZONES)].copy()
     
-    print(f"Total MSD records: {len(msd)}")
-    print(f"Active balancing sessions: {len(msd_active)} ({len(msd_active)/len(msd)*100:.1f}%)")
+    # Fill NaN prices with 0 for visualization
+    market_it['averagepurchasingprice'] = market_it['averagepurchasingprice'].fillna(0)
+    market_it['averagesellingprice'] = market_it['averagesellingprice'].fillna(0)
     
-    # 1. Volume statistics by zone
-    print("\n1. BALANCING VOLUMES BY ZONE")
-    zone_stats = msd.groupby('zone').agg({
-        'volumespurchased': 'sum',
-        'volumessold': 'sum'
-    })
-    zone_stats['net_purchased'] = zone_stats['volumespurchased'] - zone_stats['volumessold']
-    zone_stats['total_volume'] = zone_stats['volumespurchased'] + zone_stats['volumessold']
-    zone_stats = zone_stats.sort_values('total_volume', ascending=False)
+    print(f"Total {market_name} records (Italian zones): {len(market_it)}")
+    print(f"Sessions with activity: {len(market_it[(market_it['volumespurchased']>0) | (market_it['volumessold']>0)])}")
     
-    print("\nTop zones by total balancing volume:")
-    print(zone_stats.head(10).to_string())
-    
-    # 2. Time pattern
-    print("\n2. HOURLY BALANCING PATTERN")
-    hourly = msd.groupby('hour').agg({
-        'volumespurchased': 'sum',
-        'volumessold': 'sum'
-    })
-    hourly['net'] = hourly['volumespurchased'] - hourly['volumessold']
-    
-    peak_hour = hourly['volumespurchased'].idxmax()
-    print(f"\nPeak upward regulation: Hour {peak_hour} ({hourly.loc[peak_hour, 'volumespurchased']:.0f} MW)")
-    
-    # 3. Price premium analysis (MSD vs MGP)
-    if 'averagepurchasingprice' in msd.columns and len(msd_active) > 0:
-        print("\n3. PRICE PREMIUM ANALYSIS")
-        
-        # Merge with MGP prices
-        msd_with_mgp = msd_active.merge(
-            mgp[['hour', 'period', 'zone', 'price']],
-            on=['hour', 'period', 'zone'],
-            how='left',
-            suffixes=('_msd', '_mgp')
-        )
-        
-        # Calculate premium
-        msd_with_mgp['premium'] = msd_with_mgp['averagepurchasingprice'] - msd_with_mgp['price']
-        
-        valid_premium = msd_with_mgp[msd_with_mgp['premium'].notna()]
-        if len(valid_premium) > 0:
-            print(f"Average balancing premium: €{valid_premium['premium'].mean():.2f}/MWh")
-            print(f"Max premium: €{valid_premium['premium'].max():.2f}/MWh")
-    
-    # Visualizations
+    # Create output directory
     Path(output_dir).mkdir(exist_ok=True)
     
-    # Plot 1: Zone imbalance bar chart
-    if len(zone_stats) > 0:
-        fig, ax = plt.subplots(figsize=(12, 6))
-        zones = zone_stats.head(10).index
-        x = np.arange(len(zones))
-        
-        ax.bar(x, zone_stats.loc[zones, 'volumespurchased'], 
-               label='Purchased (Upward)', alpha=0.7, color='red')
-        ax.bar(x, -zone_stats.loc[zones, 'volumessold'], 
-               label='Sold (Downward)', alpha=0.7, color='blue')
-        
-        ax.set_xlabel('Zone')
-        ax.set_ylabel('Volume (MWh)')
-        ax.set_title(f'MSD Balancing Volumes by Zone - {date_str}', fontweight='bold')
-        ax.set_xticks(x)
-        ax.set_xticklabels(zones)
-        ax.legend()
-        ax.axhline(y=0, color='black', linewidth=0.5)
-        ax.grid(alpha=0.3)
-        
-        plt.tight_layout()
-        plt.savefig(f'{output_dir}/msd_zone_volumes.png', dpi=200)
-        print(f"\n  Saved: {output_dir}/msd_zone_volumes.png")
-        plt.close()
+    # === PLOT 1: Buy Prices (All zones on one chart) ===
+    fig, ax = plt.subplots(figsize=(14, 6))
+    for zone in ITALIAN_ZONES:
+        zone_data = market_it[market_it['zone'] == zone].sort_values('hour')
+        if len(zone_data) > 0:
+            ax.plot(zone_data['hour'], zone_data['averagepurchasingprice'], 
+                   marker='o', label=zone, linewidth=2, alpha=0.8)
     
-    # Plot 2: Zone-specific hourly patterns (Italian zones only)
-    italian_zones = ['NORD', 'CNOR', 'CSUD', 'SUD', 'CALA', 'SICI', 'SARD']
-    msd_it = msd[msd['zone'].isin(italian_zones)]
+    ax.set_xlabel('Hour', fontsize=11)
+    ax.set_ylabel('Price (€/MWh)', fontsize=11)
+    ax.set_title(f'{market_name} Buy Prices by Zone - {date_str}', fontsize=13, fontweight='bold')
+    ax.legend(loc='best', ncol=2)
+    ax.grid(alpha=0.3)
+    ax.set_xticks(range(1, 25))
+    plt.tight_layout()
+    plt.savefig(f'{output_dir}/{market_name.lower()}_buy_prices.png', dpi=200)
+    print(f"  ✓ {market_name.lower()}_buy_prices.png")
+    plt.close()
     
-    # Create subplots: one per zone
+    # === PLOT 2: Sell Prices (All zones on one chart) ===
+    fig, ax = plt.subplots(figsize=(14, 6))
+    for zone in ITALIAN_ZONES:
+        zone_data = market_it[market_it['zone'] == zone].sort_values('hour')
+        if len(zone_data) > 0 and zone_data['averagesellingprice'].sum() > 0:
+            ax.plot(zone_data['hour'], zone_data['averagesellingprice'], 
+                   marker='s', label=zone, linewidth=2, alpha=0.8)
+    
+    ax.set_xlabel('Hour', fontsize=11)
+    ax.set_ylabel('Price (€/MWh)', fontsize=11)
+    ax.set_title(f'{market_name} Sell Prices by Zone - {date_str}', fontsize=13, fontweight='bold')
+    ax.legend(loc='best', ncol=2)
+    ax.grid(alpha=0.3)
+    ax.set_xticks(range(1, 25))
+    plt.tight_layout()
+    plt.savefig(f'{output_dir}/{market_name.lower()}_sell_prices.png', dpi=200)
+    print(f"  ✓ {market_name.lower()}_sell_prices.png")
+    plt.close()
+    
+    # === PLOT 3: Zone-specific comparison (MSD buy/sell vs MGP) ===
     fig, axes = plt.subplots(4, 2, figsize=(16, 14))
     axes = axes.flatten()
     
-    for idx, zone in enumerate(italian_zones):
+    for idx, zone in enumerate(ITALIAN_ZONES):
         ax = axes[idx]
-        zone_data = msd_it[msd_it['zone'] == zone]
+        zone_market = market_it[market_it['zone'] == zone].sort_values('hour')
+        zone_mgp = mgp[mgp['zone'] == zone].sort_values('hour')
         
-        # Aggregate by hour
-        hourly_zone = zone_data.groupby('hour').agg({
-            'volumespurchased': 'sum',
-            'volumessold': 'sum'
-        })
-        
-        hours = hourly_zone.index
-        width = 0.35
-        x = np.arange(len(hours))
-        
-        # Bar chart: purchased (red) and sold (blue)
-        ax.bar(x - width/2, hourly_zone['volumespurchased'], width, 
-               label='Purchased (Upward)', color='#d62728', alpha=0.8)
-        ax.bar(x + width/2, hourly_zone['volumessold'], width, 
-               label='Sold (Downward)', color='#1f77b4', alpha=0.8)
+        if len(zone_market) > 0 and len(zone_mgp) > 0:
+            # Average by hour (handle multiple periods)
+            hourly_market = zone_market.groupby('hour').agg({
+                'averagepurchasingprice': 'mean',
+                'averagesellingprice': 'mean'
+            })
+            hourly_mgp = zone_mgp.groupby('hour')['price'].mean()
+            
+            hours = hourly_market.index
+            
+            # Plot 3 lines
+            ax.plot(hours, hourly_market['averagepurchasingprice'], 
+                   marker='o', label=f'{market_name} Buy', color='#d62728', linewidth=2)
+            ax.plot(hours, hourly_market['averagesellingprice'], 
+                   marker='s', label=f'{market_name} Sell', color='#1f77b4', linewidth=2)
+            
+            # MGP baseline
+            if len(hourly_mgp) > 0:
+                ax.plot(hourly_mgp.index, hourly_mgp.values, 
+                       marker='^', label='MGP', color='#2ca02c', linewidth=2, linestyle='--')
         
         ax.set_xlabel('Hour', fontsize=9)
-        ax.set_ylabel('Volume (MWh)', fontsize=9)
-        ax.set_title(f'{zone} - Daily Total: {hourly_zone.sum().sum():.0f} MWh', 
-                    fontweight='bold', fontsize=10)
-        ax.set_xticks(x[::4])  # Show every 4th hour
-        ax.set_xticklabels(hours[::4])
-        ax.legend(fontsize=8, loc='upper left')
-        ax.grid(alpha=0.3, axis='y')
+        ax.set_ylabel('Price (€/MWh)', fontsize=9)
+        ax.set_title(f'{zone}', fontweight='bold', fontsize=10)
+        ax.legend(fontsize=8)
+        ax.grid(alpha=0.3)
     
-    # Hide last subplot (we have 7 zones, 8 subplots)
     axes[7].axis('off')
-    
-    fig.suptitle(f'MSD Balancing by Zone - {date_str}', fontsize=14, fontweight='bold', y=0.995)
+    fig.suptitle(f'{market_name} vs MGP Prices - {date_str}', fontsize=14, fontweight='bold', y=0.995)
     plt.tight_layout()
-    plt.savefig(f'{output_dir}/msd_zone_hourly_patterns.png', dpi=200, bbox_inches='tight')
-    print(f"  Saved: {output_dir}/msd_zone_hourly_patterns.png")
+    plt.savefig(f'{output_dir}/{market_name.lower()}_zone_price_comparison.png', dpi=200, bbox_inches='tight')
+    print(f"  ✓ {market_name.lower()}_zone_price_comparison.png")
     plt.close()
-
-
-def analyze_mb(mb_file, output_dir, date_str):
-    """Analyze MB (real-time balancing) data."""
     
-    print("\n=== MB BALANCING ANALYSIS ===\n")
+    # === PLOT 4: Buy Volumes (Bar chart) ===
+    fig, axes = plt.subplots(4, 2, figsize=(16, 14))
+    axes = axes.flatten()
     
-    # Load data
-    mb = pd.read_csv(mb_file)
-    mb.columns = [c.lower() for c in mb.columns]
+    for idx, zone in enumerate(ITALIAN_ZONES):
+        ax = axes[idx]
+        zone_data = market_it[market_it['zone'] == zone].sort_values('hour')
+        
+        if len(zone_data) > 0:
+            hourly_vol = zone_data.groupby('hour')['volumespurchased'].sum()
+            hours = hourly_vol.index
+            
+            ax.bar(hours, hourly_vol.values, color='#d62728', alpha=0.7)
+            ax.set_xlabel('Hour', fontsize=9)
+            ax.set_ylabel('Volume (MWh)', fontsize=9)
+            ax.set_title(f'{zone} - Total: {hourly_vol.sum():.0f} MWh', 
+                        fontweight='bold', fontsize=10)
+            ax.grid(alpha=0.3, axis='y')
     
-    print(f"Total MB records: {len(mb)}")
-    print(f"\nColumns: {list(mb.columns)}")
+    axes[7].axis('off')
+    fig.suptitle(f'{market_name} Buy Volumes - {date_str}', fontsize=14, fontweight='bold', y=0.995)
+    plt.tight_layout()
+    plt.savefig(f'{output_dir}/{market_name.lower()}_buy_volumes.png', dpi=200, bbox_inches='tight')
+    print(f"  ✓ {market_name.lower()}_buy_volumes.png")
+    plt.close()
     
-    # Service type breakdown
-    if 'servicetype' in mb.columns:
-        print("\nService types:")
-        print(mb['servicetype'].value_counts())
+    # === PLOT 5: Sell Volumes (Bar chart) ===
+    fig, axes = plt.subplots(4, 2, figsize=(16, 14))
+    axes = axes.flatten()
     
-    # Zone distribution
-    if 'zone' in mb.columns:
-        print("\nZone distribution:")
-        print(mb.groupby('zone').size().sort_values(ascending=False))
+    for idx, zone in enumerate(ITALIAN_ZONES):
+        ax = axes[idx]
+        zone_data = market_it[market_it['zone'] == zone].sort_values('hour')
+        
+        if len(zone_data) > 0:
+            hourly_vol = zone_data.groupby('hour')['volumessold'].sum()
+            hours = hourly_vol.index
+            
+            ax.bar(hours, hourly_vol.values, color='#1f77b4', alpha=0.7)
+            ax.set_xlabel('Hour', fontsize=9)
+            ax.set_ylabel('Volume (MWh)', fontsize=9)
+            ax.set_title(f'{zone} - Total: {hourly_vol.sum():.0f} MWh', 
+                        fontweight='bold', fontsize=10)
+            ax.grid(alpha=0.3, axis='y')
+    
+    axes[7].axis('off')
+    fig.suptitle(f'{market_name} Sell Volumes - {date_str}', fontsize=14, fontweight='bold', y=0.995)
+    plt.tight_layout()
+    plt.savefig(f'{output_dir}/{market_name.lower()}_sell_volumes.png', dpi=200, bbox_inches='tight')
+    print(f"  ✓ {market_name.lower()}_sell_volumes.png")
+    plt.close()
+    
+    print(f"\n✅ {market_name} analysis complete - 5 visualizations created\n")
 
 
 def main():
     parser = argparse.ArgumentParser(description='Analyze MSD/MB balancing markets')
-    parser.add_argument('--date', type=str, required=True,
-                       help='Date to analyze (YYYY-MM-DD)')
+    parser.add_argument('--date', type=str, default=None,
+                       help='Date to analyze (YYYY-MM-DD), defaults to yesterday')
     
     args = parser.parse_args()
+    
+    # Default to yesterday if no date provided
+    if args.date is None:
+        target_date = (date.today() - timedelta(days=1)).strftime('%Y-%m-%d')
+        print(f"Using default date: {target_date}")
+    else:
+        target_date = args.date
     
     # Paths
     base_dir = Path(__file__).parent
     data_dir = base_dir / "data"
     output_dir = base_dir / "analysis"
     
-    date_clean = args.date.replace('-', '')
+    msd_file = data_dir / f"MSD_ME_MSDExAnteResults_{target_date}.csv"
+    mb_file = data_dir / f"MB_ME_MBResults_{target_date}.csv"
+    mgp_file = data_dir / f"MGP_ME_ZonalPrices_{target_date}.csv"
     
-    msd_file = data_dir / f"MSD_ME_MSDExAnteResults_{args.date}.csv"
-    mb_file = data_dir / f"MB_ME_MBResults_{args.date}.csv"
-    mgp_file = data_dir / f"MGP_ME_ZonalPrices_{args.date}.csv"
-    
-    # Check files exist
-    if not msd_file.exists():
-        print(f"Error: MSD file not found: {msd_file}")
-        return
-    
+    # Check MGP file (required for comparison)
     if not mgp_file.exists():
-        print(f"Error: MGP file not found: {mgp_file}")
+        print(f"Error: MGP file required: {mgp_file}")
         return
     
     # Analyze MSD
-    analyze_msd(str(msd_file), str(mgp_file), str(output_dir), args.date)
-    
-    # Analyze MB if available
-    if mb_file.exists():
-        analyze_mb(str(mb_file), str(output_dir), args.date)
+    if msd_file.exists():
+        analyze_market("MSD", str(msd_file), str(mgp_file), str(output_dir), target_date)
     else:
-        print(f"\nWarning: MB file not found: {mb_file}")
+        print(f"Warning: MSD file not found: {msd_file}")
     
-    print("\n✅ Balancing analysis complete!\n")
+    # Analyze MB
+    if mb_file.exists():
+        analyze_market("MB", str(mb_file), str(mgp_file), str(output_dir), target_date)
+    else:
+        print(f"Warning: MB file not found: {mb_file}")
+    
+    print("✅ All balancing analysis complete!\n")
 
 
 if __name__ == "__main__":
