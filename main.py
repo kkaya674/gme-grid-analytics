@@ -51,7 +51,13 @@ def main():
         if success:
             print(f"  [SUCCESS] MSD Zonal Prices saved to data/")
 
-        # 5. Check Quotas
+        # 5. Fetch and Save MGP Transit Flows
+        print(f"Fetching MGP Transit Flows...")
+        success = client.fetch_and_save_csv("ME_Transits", "MGP", target_date, target_date)
+        if success:
+            print(f"  [SUCCESS] MGP Transit Flows saved to data/")
+
+        # 6. Check Quotas
         quotas = client.get_my_quotas()
         if quotas:
             print(f"\nRemaining Quotas: {quotas}")

@@ -25,6 +25,7 @@ class GMEPlotter:
         self.network_path = network_path
         self.network = None
         self.prices_df = None
+        self.flows_df = None
         
     def load_network(self):
         """Load PyPSA-Eur zonal network."""
@@ -48,6 +49,23 @@ class GMEPlotter:
         df.columns = [c.strip().lower() for c in df.columns]
         self.prices_df = df
         print(f"  Loaded {len(df)} price records")
+        return df
+    
+    def load_flow_data(self, flow_csv):
+        """
+        Load GME transmission flow data.
+        
+        Args:
+            flow_csv: Path to flow CSV file (ME_Transits format)
+            
+        Returns:
+            DataFrame with flow data
+        """
+        print(f"Loading flow data from {flow_csv}...")
+        df = pd.read_csv(flow_csv)
+        df.columns = [c.strip().lower() for c in df.columns]
+        self.flows_df = df
+        print(f"  Loaded {len(df)} flow records")
         return df
     
     def plot_market(self, hour=12, output_file='gme_plot.png'):
@@ -137,8 +155,120 @@ class GMEPlotter:
         
         return fig
     
+    def plot_flows(self, hour=12, output_file='gme_flows.png'):
+        """
+        Plot transmission flows for a specific hour.
+        
+        Args:
+            hour: Hour to plot (1-24)
+            output_file: Output filename
+        """
+        if self.network is None or self.prices_df is None or self.flows_df is None:
+            raise ValueError("Network, prices, and flows must be loaded first.")
+        
+        # Filter data for specific hour
+        h_prices = self.prices_df[self.prices_df['hour'] == hour].set_index('zone')['price']
+        h_flows = self.flows_df[self.flows_df['hour'] == hour]
+        
+        print(f"  Found {len(h_flows)} flows for hour {hour}")
+        
+        # Map prices to buses
+        self.network.buses['marginal_price'] = 0.0
+        for zone, price in h_prices.items():
+            if zone in self.network.buses.index:
+                self.network.buses.at[zone, 'marginal_price'] = price
+            elif zone == 'PUN':
+                it_zones = ['NORD', 'CNOR', 'CSUD', 'SUD', 'CALA', 'SICI', 'SARD']
+                for itz in it_zones:
+                    if itz in self.network.buses.index:
+                        self.network.buses.at[itz, 'marginal_price'] = price
+        
+        # Map flows to lines and calculate utilization
+        self.network.lines['flow'] = 0.0
+        self.network.lines['utilization'] = 0.0
+        
+        for _, row in h_flows.iterrows():
+            from_zone = str(row['from']).strip()
+            to_zone = str(row['to']).strip()
+            transit = float(row['transit'])
+            
+            # Find matching line (bidirectional)
+            mask = ((self.network.lines.bus0 == from_zone) & (self.network.lines.bus1 == to_zone)) | \
+                   ((self.network.lines.bus0 == to_zone) & (self.network.lines.bus1 == from_zone))
+            
+            if mask.any():
+                line_idx = self.network.lines[mask].index[0]
+                self.network.lines.at[line_idx, 'flow'] = abs(transit)
+                capacity = self.network.lines.at[line_idx, 's_nom']
+                if capacity > 0:
+                    self.network.lines.at[line_idx, 'utilization'] = abs(transit) / capacity * 100
+        
+        # Create plot
+        print("\nGenerating flow plot...")
+        fig = plt.figure(figsize=(14, 10))
+        ax = plt.axes(projection=ccrs.PlateCarree())
+        
+        ax.add_feature(cfeature.LAND, facecolor='lightgray')
+        ax.add_feature(cfeature.COASTLINE, linewidth=0.5)
+        ax.add_feature(cfeature.BORDERS, linewidth=0.5)
+        ax.set_extent([6, 21, 35, 49], crs=ccrs.PlateCarree())
+        
+        # Import plot_network
+        try:
+            from pypsa.plot import plot_network
+        except ImportError:
+            try:
+                from pypsa.plot.maps.static import plot_network
+            except ImportError:
+                from pypsa.plot import plot as plot_network
+        
+        # Use utilization for coloring lines (green to red)
+        line_colors = self.network.lines.utilization.fillna(0)
+        
+        plot_network(
+            self.network,
+            ax=ax,
+            bus_colors=self.network.buses.marginal_price,
+            bus_cmap='viridis',
+            line_widths=(self.network.lines.flow / 500 + 1),  # Size by flow
+            line_colors=line_colors,
+            line_cmap='RdYlGn_r',  # Red = high utilization, green = low
+            bus_sizes=0.01
+        )
+        
+        # Add labels
+        for idx, row in self.network.buses.iterrows():
+            if row.marginal_price > 0:
+                ax.text(row.x, row.y, f"{idx}\n€{row.marginal_price:.1f}",
+                       fontsize=8, ha='center', va='bottom',
+                       bbox=dict(boxstyle='round,pad=0.3', facecolor='white', alpha=0.7))
+        
+        market_name = self._get_market_name()
+        plt.title(f"GME {market_name} Flows (Hour {hour})", fontsize=14, fontweight='bold')
+        
+        # Price colorbar
+        sm_price = plt.cm.ScalarMappable(cmap='viridis', 
+                                         norm=plt.Normalize(vmin=self.network.buses.marginal_price.min(), 
+                                                           vmax=self.network.buses.marginal_price.max()))
+        sm_price.set_array([])
+        cbar_price = plt.colorbar(sm_price, ax=ax, orientation='vertical', pad=0.02, fraction=0.03, location='left')
+        cbar_price.set_label('Price (€/MWh)', fontsize=10)
+        
+        # Utilization colorbar
+        sm_util = plt.cm.ScalarMappable(cmap='RdYlGn_r',
+                                        norm=plt.Normalize(vmin=0, vmax=100))
+        sm_util.set_array([])
+        cbar_util = plt.colorbar(sm_util, ax=ax, orientation='vertical', pad=0.02, fraction=0.03)
+        cbar_util.set_label('Line Utilization (%)', fontsize=10)
+        
+        plt.tight_layout()
+        plt.savefig(output_file, dpi=300, bbox_inches='tight')
+        print(f"Flow plot saved: {output_file}")
+        
+        return fig
+    
     def _get_market_name(self):
         """Extract market name from loaded data."""
-        if 'market' in self.prices_df.columns:
+        if self.prices_df is not None and 'market' in self.prices_df.columns:
             return self.prices_df['market'].iloc[0]
         return "Market"
