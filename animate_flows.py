@@ -106,8 +106,13 @@ def create_animation(network_path, price_csv, flow_csv, output_file='mgp_animati
         # Plot
         ax.add_feature(cfeature.LAND, facecolor='lightgray')
         ax.add_feature(cfeature.COASTLINE, linewidth=0.5)
-        ax.add_feature(cfeature.BORDERS, linewidth=0.5)
+        ax.add_feature(cfeature.BORDERS, linewidth=0.8, edgecolor='black')
         ax.set_extent([6, 21, 35, 49], crs=ccrs.PlateCarree())
+        
+        # Add gridlines
+        gl = ax.gridlines(draw_labels=True, linewidth=0.5, alpha=0.3)
+        gl.top_labels = False
+        gl.right_labels = False
         
         try:
             from pypsa.plot import plot_network
@@ -129,6 +134,19 @@ def create_animation(network_path, price_csv, flow_csv, output_file='mgp_animati
             line_cmap='RdYlGn_r',
             bus_sizes=0.01
         )
+        
+        # Add zone labels with prices
+        for idx, row in plotter.network.buses.iterrows():
+            price = row.marginal_price
+            if price > 0:
+                label_text = f"{idx}\n€{price:.1f}"
+            else:
+                label_text = idx
+            
+            ax.text(row.x, row.y + 0.3, label_text,
+                   fontsize=8, ha='center', va='bottom', fontweight='bold',
+                   bbox=dict(boxstyle='round,pad=0.3', facecolor='white', 
+                            edgecolor='black', alpha=0.85, linewidth=0.5))
         
         # Title with session info
         plt.title(f"GME MGP Flows | Hour {hour:02d} Session {period} ({frame_idx+1}/96)", 
