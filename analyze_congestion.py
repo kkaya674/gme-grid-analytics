@@ -160,26 +160,31 @@ def analyze_congestion(flow_csv, price_csv, output_dir='analysis'):
     
     # Show all network corridors (no need to filter, already filtered)
     if len(avg_util) > 0:
-        top_corridors = avg_util.head(15).index
-        pivot_top = pivot_util.loc[pivot_util.index.intersection(top_corridors)]
-        
-        fig, ax = plt.subplots(figsize=(24, 10))
-        sns.heatmap(pivot_top, cmap='RdYlGn_r', center=50, vmin=0, vmax=100,
-                    annot=False, fmt='.1f', cbar_kws={'label': 'Utilization (%)'})
-        plt.title('Utilization Heatmap - Network Corridors (96 Sessions)', fontsize=14, fontweight='bold')
-        plt.xlabel('Session (15-min intervals, 1-96)')
-        plt.ylabel('Corridor')
-        
-        # Add hour markers on x-axis
-        hour_ticks = [i*4 for i in range(25)]  # 0, 4, 8, ..., 96
-        hour_labels = [f'H{i:02d}' for i in range(25)]
-        ax.set_xticks(hour_ticks)
-        ax.set_xticklabels(hour_labels, rotation=0)
-        
-        plt.tight_layout()
-        plt.savefig(f'{output_dir}/congestion_heatmap_96sessions.png', dpi=200)
-        print(f"  Saved: {output_dir}/congestion_heatmap_96sessions.png")
-        plt.close()
+        # Filter out low-utilization corridors (< 5% avg)
+        significant_corridors = avg_util[avg_util >= 5.0]
+        if len(significant_corridors) == 0:
+            print("  No corridors with utilization >= 5%, skipping heatmap")
+        else:
+            top_corridors = significant_corridors.head(15).index
+            pivot_top = pivot_util.loc[pivot_util.index.intersection(top_corridors)]
+            
+            fig, ax = plt.subplots(figsize=(24, 10))
+            sns.heatmap(pivot_top, cmap='RdYlGn_r', center=50, vmin=0, vmax=100,
+                        annot=False, fmt='.1f', cbar_kws={'label': 'Utilization (%)'})
+            plt.title(f'Utilization Heatmap - Network Corridors (96 Sessions, >5% avg)', fontsize=14, fontweight='bold')
+            plt.xlabel('Session (15-min intervals, 1-96)')
+            plt.ylabel('Corridor')
+            
+            # Add hour markers on x-axis
+            hour_ticks = [i*4 for i in range(25)]  # 0, 4, 8, ..., 96
+            hour_labels = [f'H{i:02d}' for i in range(25)]
+            ax.set_xticks(hour_ticks)
+            ax.set_xticklabels(hour_labels, rotation=0)
+            
+            plt.tight_layout()
+            plt.savefig(f'{output_dir}/congestion_heatmap_96sessions.png', dpi=200)
+            print(f"  Saved: {output_dir}/congestion_heatmap_96sessions.png ({len(pivot_top)} corridors)")
+            plt.close()
     
     # Visualization 2: Morning vs midday comparison
     # Filter out corridors with inf utilization (capacity = 0)
