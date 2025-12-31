@@ -33,9 +33,9 @@ def main():
     args = parser.parse_args()
     
     # Paths
-    base_dir = Path(__file__).parent
-    network_path = base_dir / "data_pypsa_eur_zonal"
-    data_dir = base_dir / "data"
+    base_dir = Path(__file__).parent.parent
+    network_path = base_dir / "data/network/data_pypsa_eur_zonal"
+    data_dir = base_dir / "workspace"
     
     # Find data file
     if args.date:

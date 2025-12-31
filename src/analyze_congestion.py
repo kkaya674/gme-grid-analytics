@@ -35,7 +35,7 @@ def analyze_congestion(flow_csv, price_csv, output_dir, date_str):
     
     # Load network for capacity data
     import pypsa
-    network = pypsa.Network('data_pypsa_eur_zonal')
+    network = pypsa.Network('data/network/data_pypsa_eur_zonal')
     
     # Calculate utilization for each flow
     flows_df['corridor'] = flows_df['from'] + '-' + flows_df['to']
@@ -263,15 +263,15 @@ def main():
     parser = argparse.ArgumentParser(description='Analyze GME congestion patterns')
     parser.add_argument('--date', type=str, default='2025-12-30',
                        help='Date to analyze (YYYY-MM-DD)')
-    parser.add_argument('--output', type=str, default='analysis',
+    parser.add_argument('--output', type=str, default='workspace',
                        help='Output directory')
     
     args = parser.parse_args()
     
     # Paths
     date_str = args.date
-    flow_csv = f"data/MGP_ME_Transits_{date_str}.csv"
-    price_csv = f"data/MGP_ME_ZonalPrices_{date_str}.csv"
+    flow_csv = f"workspace/MGP_ME_Transits_{date_str}.csv"
+    price_csv = f"workspace/MGP_ME_ZonalPrices_{date_str}.csv"
     
     if not Path(flow_csv).exists() or not Path(price_csv).exists():
         print(f"Error: Data files not found for {date_str}")

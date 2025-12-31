@@ -217,17 +217,17 @@ def main():
     parser = argparse.ArgumentParser(description='Create GME flow animation')
     parser.add_argument('--date', type=str, default='2025-12-30',
                        help='Date to animate (YYYY-MM-DD)')
-    parser.add_argument('--output', type=str, default='analysis/mgp_flow_animation.gif',
+    parser.add_argument('--output', type=str, default='workspace/mgp_flow_animation.gif',
                        help='Output GIF filename')
     
     args = parser.parse_args()
     
     # Paths
-    base_dir = Path(__file__).parent
-    network_path = base_dir / "data_pypsa_eur_zonal"
+    base_dir = Path(__file__).parent.parent
+    network_path = base_dir / "data/network/data_pypsa_eur_zonal"
     date_str = args.date
-    price_csv = base_dir / f"data/MGP_ME_ZonalPrices_{date_str}.csv"
-    flow_csv = base_dir / f"data/MGP_ME_Transits_{date_str}.csv"
+    price_csv = base_dir / f"workspace/MGP_ME_ZonalPrices_{date_str}.csv"
+    flow_csv = base_dir / f"workspace/MGP_ME_Transits_{date_str}.csv"
     
     # Check files exist
     for f in [price_csv, flow_csv]:

@@ -4,7 +4,7 @@ from datetime import date, timedelta
 from dotenv import load_dotenv
 
 # Ensure we can import from src
-sys.path.append(os.path.join(os.path.dirname(__file__), 'src'))
+
 
 from gme_api.client import GMEClient
 
