@@ -170,9 +170,9 @@ def main():
     
     date_clean = args.date.replace('-', '')
     
-    msd_file = data_dir / f"MSD_ME_MSDExAnteResults_{date_clean}.csv"
-    mb_file = data_dir / f"MB_ME_MBResults_{date_clean}.csv"
-    mgp_file = data_dir / f"MGP_ME_ZonalPrices_{date_clean}.csv"
+    msd_file = data_dir / f"MSD_ME_MSDExAnteResults_{args.date}.csv"
+    mb_file = data_dir / f"MB_ME_MBResults_{args.date}.csv"
+    mgp_file = data_dir / f"MGP_ME_ZonalPrices_{args.date}.csv"
     
     # Check files exist
     if not msd_file.exists():
