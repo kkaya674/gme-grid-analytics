@@ -36,10 +36,10 @@ If you prefer using Docker, you can run the pipeline without installing local de
 docker compose build
 
 # Fetch data for a specific date
-docker compose run app python main.py --date 2025-12-30
+docker compose run app python src/main.py --date 2025-12-30
 
 # Run congestion analysis
-docker compose run app python analyze_congestion.py --date 2025-12-30
+docker compose run app python src/analyze_congestion.py --date 2025-12-30
 ```
 
 ### 3. VS Code Dev Containers
@@ -62,81 +62,71 @@ GME_PASSWORD=your_password
 
 ```bash
 # Fetch data for yesterday (default)
-python main.py
+python src/main.py
 
 # Or fetch for a specific date
-python main.py --date 2025-12-30
+python src/main.py --date 2025-12-30
 
-# This fetches:
-# - MGP prices (ME_ZonalPrices)
-# - MGP flows (ME_Transits)
-# - GME transmission limits (ME_TransmissionLimits)
-# - MSD results (ME_MSDExAnteResults)
-# - MB results (ME_MBResults)
+
 ```
 
 ### 4. Generate Visualizations
 
 ```bash
 # === CONGESTION ANALYSIS ===
-python analyze_congestion.py --date 2025-12-30
-# Outputs:
+python src/analyze_congestion.py --date 2025-12-30
+# Outputs to workspace/:
 # - congestion_heatmap_96sessions.png (>5% avg utilization corridors)
 # - corridor_timeseries.png
 # - morning_vs_midday.png
 
 # === BALANCING MARKETS ===
-python analyze_balancing.py --date 2025-12-30
-# Outputs (9 total):
+python src/analyze_balancing.py --date 2025-12-30
+# Outputs (9 total) to workspace/:
 # MSD: zone price comparison, buy/sell volumes
 # MB_RS: zone price comparison, buy/sell volumes  
 # MB_AS: zone price comparison, buy/sell volumes
 
 # === FLOW ANIMATION ===
-python animate_flows.py --date 2025-12-30 --output analysis/mgp_animation.gif
+python src/animate_flows.py --date 2025-12-30 --output workspace/mgp_animation.gif
 # 96-frame animated GIF showing 24h flow evolution
 
 # === STATIC PLOTS ===
-python plot_gme.py --market MGP --hour 12 --date 2025-12-30
-python plot_flows.py --date 2025-12-30 --hour 12
+python src/plot_gme.py --market MGP --hour 12 --date 2025-12-30
+python src/plot_flows.py --date 2025-12-30 --hour 12
 ```
 
 ## Repository Structure
 
 ```
 gme_api/
-├── main.py                      # Data fetcher (GME API)
-├── analyze_congestion.py        # Congestion heatmaps & analysis
-├── analyze_balancing.py         # MSD/MB balancing analysis
-├── animate_flows.py             # Animated flow visualization
-├── plot_gme.py                  # Static price plots
-├── plot_flows.py                # Static flow plots
+├── src/                         # All source code
+│   ├── gme_api/                 # Core API library
+│   │   ├── client.py            # GME API client
+│   │   └── utils.py             # Data processing utilities
+│   ├── plotting/                # Visualization library
+│   │   ├── plotter.py           # Base plotter class
+│   │   └── utils.py             # Plot utilities
+│   ├── main.py                  # Data fetcher
+│   ├── analyze_congestion.py    # Congestion analysis
+│   ├── analyze_balancing.py     # Balancing markets analysis
+│   ├── animate_flows.py         # Flow animation
+│   ├── plot_gme.py              # Static price plots
+│   └── plot_flows.py            # Static flow plots
 │
-├── src/gme_api/                 # Core library
-│   ├── client.py                # GME API client
-│   └── utils.py                 # Data processing utilities
+├── data/                        # Static data
+│   ├── network/                 # Network topology data
+│   └── aggregation/             # Aggregation scripts & data
 │
-├── plotting/                    # Visualization modules
-│   ├── plotter.py               # Base plotter class
-│   └── utils.py                 # Plot utilities
-│
-├── data/                        # Market data (CSV)
-│   ├── MGP_ME_ZonalPrices_*.csv
-│   ├── MGP_ME_Transits_*.csv
-│   ├── MGP_ME_TransmissionLimits_*.csv
-│   ├── MSD_ME_MSDExAnteResults_*.csv
-│   └── MB_ME_MBResults_*.csv
-│
-├── analysis/                    # Generated visualizations
-│   ├── congestion_heatmap_96sessions.png
-│   ├── msd_zone_price_comparison.png
-│   ├── mb_rs_zone_price_comparison.png
-│   ├── mb_as_zone_price_comparison.png
-│   └── mgp_animation.gif
+├── workspace/                   # Generated outputs (gitignored)
+│   ├── *.csv                    # Market data CSVs
+│   ├── *.png                    # Analysis visualizations
+│   └── *.gif                    # Animations
 │
 ├── documents/                   # Documentation & PDFs
-├── data_pypsa_eur_zonal/       # PyPSA-Eur network data
-└── italy_regions.geojson       # Italian regional boundaries
+├── archive/                     # Archived code
+├── .devcontainer/               # Dev container configuration
+└── requirements.txt             # Dependencies
 ```
 
 ## Key Analysis Scripts

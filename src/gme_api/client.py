@@ -131,7 +131,7 @@ class GMEClient:
             return self.decode_response(response)
         return None
 
-    def fetch_and_save_csv(self, data_name: str, segment: str, start_date: Union[date, str, int], end_date: Union[date, str, int], output_dir: str = "data") -> bool:
+    def fetch_and_save_csv(self, data_name: str, segment: str, start_date: Union[date, str, int], end_date: Union[date, str, int], output_dir: str = "workspace") -> bool:
         """Fetches data, processes it, and saves as CSV."""
         data = self.fetch_data(data_name, segment, start_date, end_date)
         if not data:

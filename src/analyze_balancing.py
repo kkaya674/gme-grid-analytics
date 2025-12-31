@@ -222,9 +222,9 @@ def main():
         target_date = args.date
     
     # Paths
-    base_dir = Path(__file__).parent
-    data_dir = base_dir / "data"
-    output_dir = base_dir / "analysis"
+    base_dir = Path(__file__).parent.parent
+    data_dir = base_dir / "workspace"
+    output_dir = base_dir / "workspace"
     
     msd_file = data_dir / f"MSD_ME_MSDExAnteResults_{target_date}.csv"
     mb_file = data_dir / f"MB_ME_MBResults_{target_date}.csv"

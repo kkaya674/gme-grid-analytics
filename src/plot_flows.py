@@ -23,17 +23,17 @@ def main():
                        help='Hour to plot (1-24, default: 12)')
     parser.add_argument('--date', type=str, default='2025-12-30',
                        help='Date to plot (YYYY-MM-DD)')
-    parser.add_argument('--output', type=str, default='analysis/mgp_flows.png',
+    parser.add_argument('--output', type=str, default='workspace/mgp_flows.png',
                        help='Output filename')
     
     args = parser.parse_args()
     
     # Paths
-    base_dir = Path(__file__).parent
-    network_path = base_dir / "data_pypsa_eur_zonal"
+    base_dir = Path(__file__).parent.parent
+    network_path = base_dir / "data/network/data_pypsa_eur_zonal"
     date_str = args.date.replace('-', '-')  # Keep dashes for now, files use dashes
-    price_csv = base_dir / f"data/MGP_ME_ZonalPrices_{date_str}.csv"
-    flow_csv = base_dir / f"data/MGP_ME_Transits_{date_str}.csv"
+    price_csv = base_dir / f"workspace/MGP_ME_ZonalPrices_{date_str}.csv"
+    flow_csv = base_dir / f"workspace/MGP_ME_Transits_{date_str}.csv"
     
     # Check files exist
     for f in [price_csv, flow_csv]:

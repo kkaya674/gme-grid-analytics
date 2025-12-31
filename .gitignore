@@ -4,6 +4,6 @@ __pycache__/
 .DS_Store
 .vscode/
 .env
-analysis/
+workspace/
 *.gif
 *.png
