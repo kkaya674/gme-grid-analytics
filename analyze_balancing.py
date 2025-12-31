@@ -111,25 +111,50 @@ def analyze_msd(msd_file, mgp_file, output_dir, date_str):
         print(f"\n  Saved: {output_dir}/msd_zone_volumes.png")
         plt.close()
     
-    # Plot 2: Hourly pattern
-    fig, ax = plt.subplots(figsize=(14, 6))
-    hours = hourly.index
+    # Plot 2: Zone-specific hourly patterns (Italian zones only)
+    italian_zones = ['NORD', 'CNOR', 'CSUD', 'SUD', 'CALA', 'SICI', 'SARD']
+    msd_it = msd[msd['zone'].isin(italian_zones)]
     
-    ax.plot(hours, hourly['volumespurchased'], marker='o', 
-            label='Purchased (Upward)', color='red', linewidth=2)
-    ax.plot(hours, hourly['volumessold'], marker='s', 
-            label='Sold (Downward)', color='blue', linewidth=2)
+    # Create subplots: one per zone
+    fig, axes = plt.subplots(4, 2, figsize=(16, 14))
+    axes = axes.flatten()
     
-    ax.set_xlabel('Hour')
-    ax.set_ylabel('Volume (MWh)')
-    ax.set_title(f'MSD Hourly Balancing Pattern - {date_str}', fontweight='bold')
-    ax.legend()
-    ax.grid(alpha=0.3)
-    ax.set_xticks(range(1, 25))
+    for idx, zone in enumerate(italian_zones):
+        ax = axes[idx]
+        zone_data = msd_it[msd_it['zone'] == zone]
+        
+        # Aggregate by hour
+        hourly_zone = zone_data.groupby('hour').agg({
+            'volumespurchased': 'sum',
+            'volumessold': 'sum'
+        })
+        
+        hours = hourly_zone.index
+        width = 0.35
+        x = np.arange(len(hours))
+        
+        # Bar chart: purchased (red) and sold (blue)
+        ax.bar(x - width/2, hourly_zone['volumespurchased'], width, 
+               label='Purchased (Upward)', color='#d62728', alpha=0.8)
+        ax.bar(x + width/2, hourly_zone['volumessold'], width, 
+               label='Sold (Downward)', color='#1f77b4', alpha=0.8)
+        
+        ax.set_xlabel('Hour', fontsize=9)
+        ax.set_ylabel('Volume (MWh)', fontsize=9)
+        ax.set_title(f'{zone} - Daily Total: {hourly_zone.sum().sum():.0f} MWh', 
+                    fontweight='bold', fontsize=10)
+        ax.set_xticks(x[::4])  # Show every 4th hour
+        ax.set_xticklabels(hours[::4])
+        ax.legend(fontsize=8, loc='upper left')
+        ax.grid(alpha=0.3, axis='y')
     
+    # Hide last subplot (we have 7 zones, 8 subplots)
+    axes[7].axis('off')
+    
+    fig.suptitle(f'MSD Balancing by Zone - {date_str}', fontsize=14, fontweight='bold', y=0.995)
     plt.tight_layout()
-    plt.savefig(f'{output_dir}/msd_hourly_pattern.png', dpi=200)
-    print(f"  Saved: {output_dir}/msd_hourly_pattern.png")
+    plt.savefig(f'{output_dir}/msd_zone_hourly_patterns.png', dpi=200, bbox_inches='tight')
+    print(f"  Saved: {output_dir}/msd_zone_hourly_patterns.png")
     plt.close()
 
 
