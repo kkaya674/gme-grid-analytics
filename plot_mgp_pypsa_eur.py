@@ -50,23 +50,11 @@ def plot_mgp_data(network_path, price_csv, limit_csv, hour=12):
                     if itz in n.buses.index and n.buses.at[itz, 'marginal_price'] == 0:
                         n.buses.at[itz, 'marginal_price'] = price
 
-    # Map limits to lines
-    # Aggregated network lines might be differently named. 
-    # Usually they connect the same zones if from/to matches bus names.
-    n.lines['s_nom'] = 1.0 # Default fallback width
-    
-    for idx, row in h_limits.iterrows():
-        f_zone = str(row['from']).strip()
-        t_zone = str(row['to']).strip()
-        
-        # In PyPSA network, checks lines between these buses
-        mask = ((n.lines.bus0 == f_zone) & (n.lines.bus1 == t_zone)) | \
-               ((n.lines.bus0 == t_zone) & (n.lines.bus1 == f_zone))
-        
-        if mask.any():
-            cap = max(float(row['maxtransmissionlimitfrom']), float(row['maxtransmissionlimitto']))
-            n.lines.loc[mask, 's_nom'] = cap
-            print(f"Line {f_zone}-{t_zone} capacity set to {cap} MW")
+    # Use PyPSA-Eur line capacities (s_nom) - these are already in the network
+    # GME limits are market-based, not physical capacities
+    print(f"\nUsing PyPSA-Eur line capacities (s_nom):")
+    for idx, row in n.lines.iterrows():
+        print(f"  {idx}: {row.s_nom:.0f} MW ({row.n_lines} lines aggregated)")
 
     # Plotting
     print("\nGenerating plot...")
