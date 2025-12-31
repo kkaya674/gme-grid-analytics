@@ -35,7 +35,10 @@ GME_PASSWORD=your_password
 ### 3. Fetch Market Data
 
 ```bash
-# Fetch all market data for a date
+# Fetch data for yesterday (default)
+python main.py
+
+# Or fetch for a specific date
 python main.py --date 2025-12-30
 
 # This fetches:
