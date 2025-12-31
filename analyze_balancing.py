@@ -33,6 +33,13 @@ def analyze_market(market_name, market_file, mgp_file, output_dir, date_str):
     mgp = pd.read_csv(mgp_file)
     mgp.columns = [c.lower() for c in mgp.columns]
     
+    # MB has different column structure - map to common names
+    if market_name == "MB":
+        # MB uses volumespurchased/soldnotrevoked
+        if 'volumespurchasednotrevoked' in market_df.columns:
+            market_df['volumespurchased'] = market_df['volumespurchasednotrevoked'].fillna(0)
+            market_df['volumessold'] = market_df['volumessoldnotrevoked'].fillna(0)
+    
     # Filter Italian zones
     market_it = market_df[market_df['zone'].isin(ITALIAN_ZONES)].copy()
     
