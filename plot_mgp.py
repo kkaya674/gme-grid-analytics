@@ -3,70 +3,81 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import cartopy.crs as ccrs
 import os
+import cartopy.feature as cfeature
 
 def plot_mgp_data(network_path, price_csv, limit_csv, hour=12):
-    # Load the zonal network
+    print(f"Loading zonal network from {network_path}...")
     n = pypsa.Network(network_path)
     
-    # Load price data
+    print(f"Loading MGP prices from {price_csv} for hour {hour}...")
     try:
-        prices = pd.read_csv(price_csv)
-        # Filter for specific hour
-        prices_at_h = prices[prices.Hour == hour].set_index('Zone')['Price']
+        prices_df = pd.read_csv(price_csv)
+        # GME data might have spaces or mixed case
+        prices_df.columns = [c.strip() for c in prices_df.columns]
+        h_prices = prices_df[prices_df['Hour'] == hour].set_index('Zone')['Price']
+        print(f"Found {len(h_prices)} zonal prices.")
     except Exception as e:
-        print(f"Error loading prices: {e}")
+        print(f"Error processing prices: {e}")
         return
 
-    # Load transmission limits
+    print(f"Loading MGP transmission limits from {limit_csv} for hour {hour}...")
     try:
-        limits = pd.read_csv(limit_csv)
-        limits_at_h = limits[limits.Hour == hour]
+        limits_df = pd.read_csv(limit_csv)
+        limits_df.columns = [c.strip() for c in limits_df.columns]
+        h_limits = limits_df[limits_df['Hour'] == hour]
+        print(f"Found {len(h_limits)} transmission limits.")
     except Exception as e:
-        print(f"Error loading limits: {e}")
+        print(f"Error processing limits: {e}")
         return
 
-    # Update bus prices for plotting
-    # Match zone names in price CSV with bus names in Network
-    n.buses['marginal_price'] = prices_at_h
+    # Map prices to buses
+    n.buses['marginal_price'] = 0.0
+    for zone, price in h_prices.items():
+        if zone in n.buses.index:
+            n.buses.at[zone, 'marginal_price'] = price
+        else:
+            # Maybe map PUN to all IT zones if it's there
+            if zone == 'PUN':
+                it_zones = ['NORD', 'CNOR', 'CSUD', 'SUD', 'SICI', 'SARD']
+                for itz in it_zones:
+                    if itz in n.buses.index and n.buses.at[itz, 'marginal_price'] == 0:
+                        n.buses.at[itz, 'marginal_price'] = price
+
+    # Map limits to lines
+    # Aggregated network lines might be differently named. 
+    # Usually they connect the same zones if from/to matches bus names.
+    n.lines['s_nom'] = 1.0 # Default fallback width
     
-    # Update line capacities for plotting
-    # In aggregated network, lines are named after connected buses usually, or have bus0, bus1
-    # We need to match 'From' and 'To' in limits_csv with n.lines.bus0 and n.lines.bus1
-    
-    for idx, row in limits_at_h.iterrows():
-        # Find line between From and To
-        mask = ((n.lines.bus0 == row['From']) & (n.lines.bus1 == row['To'])) | \
-               ((n.lines.bus0 == row['To']) & (n.lines.bus1 == row['From']))
+    for idx, row in h_limits.iterrows():
+        f_zone = str(row['From']).strip()
+        t_zone = str(row['To']).strip()
+        
+        # In PyPSA network, checks lines between these buses
+        mask = ((n.lines.bus0 == f_zone) & (n.lines.bus1 == t_zone)) | \
+               ((n.lines.bus0 == t_zone) & (n.lines.bus1 == f_zone))
         
         if mask.any():
-            # Use the max of both directions for line width representation
-            capacity = max(row['MaxTransmissionLimitFrom'], row['MaxTransmissionLimitTo'])
-            n.lines.loc[mask, 's_nom'] = capacity
-        else:
-            # If line doesn't exist in network but exists in limits, we might want to add it?
-            # For now, just skip or warn
-            pass
+            cap = max(float(row['MaxTransmissionLimitFrom']), float(row['MaxTransmissionLimitTo']))
+            n.lines.loc[mask, 's_nom'] = cap
+            print(f"Line {f_zone}-{t_zone} capacity set to {cap} MW")
 
-    # Plot
-    fig, ax = plt.subplots(figsize=(10, 12), subplot_kw={'projection': ccrs.PlateCarree()})
+    # Final Plotting
+    fig, ax = plt.subplots(figsize=(12, 12), subplot_kw={'projection': ccrs.PlateCarree()})
     
-    # Add map features
-    import cartopy.feature as cfeature
-    ax.add_feature(cfeature.BORDERS, linestyle=':')
-    ax.add_feature(cfeature.COASTLINE)
+    ax.add_feature(cfeature.BORDERS, linestyle='-', alpha=0.5)
+    ax.add_feature(cfeature.COASTLINE, alpha=0.5)
+    ax.add_feature(cfeature.LAND, facecolor='#f9f9f9')
     ax.set_extent([6, 20, 36, 48], crs=ccrs.PlateCarree())
 
-    # Plot network
-    # Nodes colored by price, lines width by capacity
+    # Try different plot functions as per PyPSA version
     try:
         from pypsa.plot import plot as plot_network
     except ImportError:
         try:
             from pypsa.plot import plot_network
         except ImportError:
-            def plot_network(*args, **kwargs):
-                print("PyPSA plot function not found. Please check your installation.")
-                return None
+            print("Could not find PyPSA plot function.")
+            return
 
     plot_network(
         n,
@@ -74,21 +85,26 @@ def plot_mgp_data(network_path, price_csv, limit_csv, hour=12):
         bus_colors=n.buses.marginal_price,
         bus_cmap='viridis',
         line_widths=n.lines.s_nom / 1000 + 1,
-        line_colors='gray'
+        line_colors='gray',
+        bus_sizes=0.2
     )
-    ax.set_title(f"MGP Zonal Prices and Transmission Limits (Hour {hour})")
     
-    # Add colorbar for prices
-    sm = plt.cm.ScalarMappable(cmap='viridis', norm=plt.Normalize(vmin=n.buses.marginal_price.min(), vmax=n.buses.marginal_price.max()))
-    plt.colorbar(sm, ax=ax, label='Price [EUR/MWh]', orientation='horizontal', pad=0.05, shrink=0.8)
+    # Add text labels for prices
+    for bus, row in n.buses.iterrows():
+        ax.text(row.x, row.y + 0.2, f"{bus}\n{row.marginal_price:.1f}", 
+                ha='center', va='bottom', fontsize=8, fontweight='bold',
+                transform=ccrs.PlateCarree(), bbox=dict(facecolor='white', alpha=0.6, pad=1))
 
+    ax.set_title(f"GME MGP Zonal Prices [EUR/MWh] and Transmission Limits [MW]\n2024-12-30 Hour {hour}", fontsize=14)
+    
     plt.savefig("mgp_plot.png", dpi=300, bbox_inches='tight')
-    print("Plot saved as mgp_plot.png")
-    plt.show()
+    print("Plot successfully generated: mgp_plot.png")
+    # plt.show() # Disabled for headless run
 
 if __name__ == "__main__":
-    network_path = "/Users/kkaya674/Desktop/CodeSuite/gme_api/data_zonal"
-    price_csv = "/Users/kkaya674/Desktop/CodeSuite/gme_api/data/MGP_ME_ZonalPrices_2024-12-30.csv"
-    limit_csv = "/Users/kkaya674/Desktop/CodeSuite/gme_api/data/MGP_ME_TransmissionLimits_2024-12-30.csv"
+    base_dir = "/Users/kkaya674/Desktop/CodeSuite/gme_api"
+    network_path = os.path.join(base_dir, "data_zonal")
+    price_csv = os.path.join(base_dir, "data/MGP_ME_ZonalPrices_2024-12-30.csv")
+    limit_csv = os.path.join(base_dir, "data/MGP_ME_TransmissionLimits_2024-12-30.csv")
     
     plot_mgp_data(network_path, price_csv, limit_csv)
