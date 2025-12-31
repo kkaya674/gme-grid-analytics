@@ -183,14 +183,33 @@ class GMEPlotter:
                     if itz in self.network.buses.index:
                         self.network.buses.at[itz, 'marginal_price'] = price
         
-        # Map flows to lines and calculate utilization
-        self.network.lines['flow'] = 0.0
-        self.network.lines['utilization'] = 0.0
+        # Load GME transmission limits for accurate utilization
+        limit_csv = None
+        if hasattr(self, 'prices_df') and self.prices_df is not None:
+            # Try to find limits file based on price CSV pattern
+            from pathlib import Path
+            import os
+            # Assume limits file exists alongside prices
+            for possible_dir in ['data', '../data', './']:
+                test_path = Path(possible_dir) / f"MGP_ME_TransmissionLimits_{h_flows['flowdate'].iloc[0] if 'flowdate' in h_flows.columns else '2025-12-30'}.csv"
+                if test_path.exists():
+                    limit_csv = str(test_path)
+                    break
+        
+        if limit_csv and Path(limit_csv).exists():
+            gme_limits = pd.read_csv(limit_csv)
+            gme_limits.columns = [c.strip().lower() for c in gme_limits.columns]
+            print(f"  Using GME transmission limits from {limit_csv}")
+        else:
+            gme_limits = None
+            print(f"  ⚠️  GME limits not found, using PyPSA s_nom (underestimates congestion)")
         
         for _, row in h_flows.iterrows():
             from_zone = str(row['from']).strip()
             to_zone = str(row['to']).strip()
             transit = float(row['transit'])
+            h = int(row['hour'])
+            p = int(row['period']) if 'period' in row else 1
             
             # Find matching line (bidirectional)
             mask = ((self.network.lines.bus0 == from_zone) & (self.network.lines.bus1 == to_zone)) | \
@@ -199,7 +218,19 @@ class GMEPlotter:
             if mask.any():
                 line_idx = self.network.lines[mask].index[0]
                 self.network.lines.at[line_idx, 'flow'] = abs(transit)
+                
+                # Use GME limit if available, otherwise fall back to s_nom
                 capacity = self.network.lines.at[line_idx, 's_nom']
+                if gme_limits is not None:
+                    limit_row = gme_limits[
+                        (gme_limits['from'] == from_zone) & 
+                        (gme_limits['to'] == to_zone) & 
+                        (gme_limits['hour'] == h) &
+                        (gme_limits['period'] == p)
+                    ]
+                    if len(limit_row) > 0:
+                        capacity = limit_row['maxtransmissionlimitfrom'].iloc[0]
+                
                 if capacity > 0:
                     self.network.lines.at[line_idx, 'utilization'] = abs(transit) / capacity * 100
         

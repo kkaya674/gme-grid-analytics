@@ -54,6 +54,41 @@ def analyze_congestion(flow_csv, price_csv, output_dir='analysis'):
     
     flows_df['utilization'] = (flows_df['abs_flow'] / flows_df['capacity'] * 100).fillna(0)
     
+    # CRITICAL: Use GME transmission limits instead of PyPSA s_nom!
+    # Load GME actual transmission limits
+    limit_file = price_csv.replace('ZonalPrices', 'TransmissionLimits')
+    if Path(limit_file).exists():
+        print(f"\n⚠️  Using GME transmission limits (not PyPSA s_nom estimates)")
+        gme_limits = pd.read_csv(limit_file)
+        gme_limits.columns = [c.strip().lower() for c in gme_limits.columns]
+        
+        # Map GME limits to flows
+        flows_df['gme_limit'] = 0.0
+        for idx, row in flows_df.iterrows():
+            from_z = str(row['from']).strip()
+            to_z = str(row['to']).strip()
+            hour = row['hour']
+            period = row['period']
+            
+            # Find GME limit for this corridor/hour/period
+            limit_row = gme_limits[
+                (gme_limits['from'] == from_z) & 
+                (gme_limits['to'] == to_z) & 
+                (gme_limits['hour'] == hour) &
+                (gme_limits['period'] == period)
+            ]
+            
+            if len(limit_row) > 0:
+                flows_df.at[idx, 'gme_limit'] = limit_row['maxtransmissionlimitfrom'].iloc[0]
+        
+        # Recalculate utilization with GME limits
+        flows_df['utilization_gme'] = (flows_df['abs_flow'] / flows_df['gme_limit'] * 100).fillna(0)
+        flows_df['utilization'] = flows_df['utilization_gme']  # Use GME limits
+        
+        print(f"  Loaded GME limits for {len(gme_limits)} corridor-hour combinations")
+    else:
+        print(f"\n⚠️  GME limits not found, using PyPSA s_nom (may underestimate congestion)")
+    
     Path(output_dir).mkdir(exist_ok=True)
     
     # Filter to ONLY network corridors (exclude external borders)
@@ -126,7 +161,7 @@ def analyze_congestion(flow_csv, price_csv, output_dir='analysis'):
         pivot_top = pivot_util.loc[pivot_util.index.intersection(top_corridors)]
         
         fig, ax = plt.subplots(figsize=(16, 10))
-        sns.heatmap(pivot_top, cmap='RdYlGn_r', center=25, vmin=0, vmax=50,
+        sns.heatmap(pivot_top, cmap='RdYlGn_r', center=50, vmin=0, vmax=100,
                     annot=True, fmt='.1f', cbar_kws={'label': 'Utilization (%)'})
         plt.title('Hourly Utilization Heatmap - Network Corridors', fontsize=14, fontweight='bold')
         plt.xlabel('Hour')
