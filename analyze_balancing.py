@@ -21,8 +21,12 @@ sns.set_style("whitegrid")
 ITALIAN_ZONES = ['NORD', 'CNOR', 'CSUD', 'SUD', 'CALA', 'SICI', 'SARD']
 
 
-def analyze_market(market_name, market_file, mgp_file, output_dir, date_str):
-    """Comprehensive balancing market analysis with price and volume charts."""
+def analyze_market(market_name, market_file, mgp_file, output_dir, date_str, service_type=None):
+    """Comprehensive balancing market analysis with price and volume charts.
+    
+    Args:
+        service_type: For MB market, filter by service type ('RS', 'AS', or None for all)
+    """
     
     print(f"\n=== {market_name} BALANCING ANALYSIS ===\n")
     
@@ -33,8 +37,13 @@ def analyze_market(market_name, market_file, mgp_file, output_dir, date_str):
     mgp = pd.read_csv(mgp_file)
     mgp.columns = [c.lower() for c in mgp.columns]
     
+    # Filter by service type if specified (for MB)
+    if service_type and 'servicetype' in market_df.columns:
+        market_df = market_df[market_df['servicetype'] == service_type].copy()
+        print(f"Filtering for service type: {service_type}")
+    
     # MB has different column structure - map to common names
-    if market_name == "MB":
+    if 'MB' in market_name:
         # MB uses volumespurchased/soldnotrevoked
         if 'volumespurchasednotrevoked' in market_df.columns:
             market_df['volumespurchased'] = market_df['volumespurchasednotrevoked'].fillna(0)
@@ -92,10 +101,12 @@ def analyze_market(market_name, market_file, mgp_file, output_dir, date_str):
     # Determine global y-axis limits
     all_prices = all_buy_prices + all_sell_prices + all_mgp_prices
     if len(all_prices) > 0:
-        y_min = min([p for p in all_prices if p > 0]) * 0.9 if any(p > 0 for p in all_prices) else 0
         y_max = max(all_prices) * 1.1
     else:
-        y_min, y_max = 0, 100
+        y_max = 100
+    
+    # Always start from -5 for better comparison
+    y_min = -5
     
     # Now plot with consistent scale
     for idx, zone in enumerate(ITALIAN_ZONES):
@@ -230,9 +241,10 @@ def main():
     else:
         print(f"Warning: MSD file not found: {msd_file}")
     
-    # Analyze MB
+    # Analyze MB - split by service type
     if mb_file.exists():
-        analyze_market("MB", str(mb_file), str(mgp_file), str(output_dir), target_date)
+        analyze_market("MB_RS", str(mb_file), str(mgp_file), str(output_dir), target_date, service_type='RS')
+        analyze_market("MB_AS", str(mb_file), str(mgp_file), str(output_dir), target_date, service_type='AS')
     else:
         print(f"Warning: MB file not found: {mb_file}")
     
