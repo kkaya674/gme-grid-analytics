@@ -53,45 +53,7 @@ def analyze_market(market_name, market_file, mgp_file, output_dir, date_str):
     # Create output directory
     Path(output_dir).mkdir(exist_ok=True)
     
-    # === PLOT 1: Buy Prices (All zones on one chart) ===
-    fig, ax = plt.subplots(figsize=(14, 6))
-    for zone in ITALIAN_ZONES:
-        zone_data = market_it[market_it['zone'] == zone].sort_values('hour')
-        if len(zone_data) > 0:
-            ax.plot(zone_data['hour'], zone_data['averagepurchasingprice'], 
-                   marker='o', label=zone, linewidth=2, alpha=0.8)
-    
-    ax.set_xlabel('Hour', fontsize=11)
-    ax.set_ylabel('Price (€/MWh)', fontsize=11)
-    ax.set_title(f'{market_name} Buy Prices by Zone - {date_str}', fontsize=13, fontweight='bold')
-    ax.legend(loc='best', ncol=2)
-    ax.grid(alpha=0.3)
-    ax.set_xticks(range(1, 25))
-    plt.tight_layout()
-    plt.savefig(f'{output_dir}/{market_name.lower()}_buy_prices.png', dpi=200)
-    print(f"  ✓ {market_name.lower()}_buy_prices.png")
-    plt.close()
-    
-    # === PLOT 2: Sell Prices (All zones on one chart) ===
-    fig, ax = plt.subplots(figsize=(14, 6))
-    for zone in ITALIAN_ZONES:
-        zone_data = market_it[market_it['zone'] == zone].sort_values('hour')
-        if len(zone_data) > 0 and zone_data['averagesellingprice'].sum() > 0:
-            ax.plot(zone_data['hour'], zone_data['averagesellingprice'], 
-                   marker='s', label=zone, linewidth=2, alpha=0.8)
-    
-    ax.set_xlabel('Hour', fontsize=11)
-    ax.set_ylabel('Price (€/MWh)', fontsize=11)
-    ax.set_title(f'{market_name} Sell Prices by Zone - {date_str}', fontsize=13, fontweight='bold')
-    ax.legend(loc='best', ncol=2)
-    ax.grid(alpha=0.3)
-    ax.set_xticks(range(1, 25))
-    plt.tight_layout()
-    plt.savefig(f'{output_dir}/{market_name.lower()}_sell_prices.png', dpi=200)
-    print(f"  ✓ {market_name.lower()}_sell_prices.png")
-    plt.close()
-    
-    # === PLOT 3: Zone-specific comparison (MSD buy/sell vs MGP) ===
+    # === PLOT 1: Zone-specific price comparison (MSD/MB buy/sell vs MGP) ===
     fig, axes = plt.subplots(4, 2, figsize=(16, 14))
     axes = axes.flatten()
     
@@ -110,22 +72,26 @@ def analyze_market(market_name, market_file, mgp_file, output_dir, date_str):
             
             hours = hourly_market.index
             
-            # Plot 3 lines
-            ax.plot(hours, hourly_market['averagepurchasingprice'], 
-                   marker='o', label=f'{market_name} Buy', color='#d62728', linewidth=2)
-            ax.plot(hours, hourly_market['averagesellingprice'], 
-                   marker='s', label=f'{market_name} Sell', color='#1f77b4', linewidth=2)
+            # Plot 3 lines - replace 0 with None for cleaner visualization
+            buy_prices = hourly_market['averagepurchasingprice'].replace(0, np.nan)
+            sell_prices = hourly_market['averagesellingprice'].replace(0, np.nan)
+            
+            ax.plot(hours, buy_prices, 
+                   marker='o', label=f'{market_name} Buy', color='#d62728', linewidth=2, markersize=4)
+            ax.plot(hours, sell_prices, 
+                   marker='s', label=f'{market_name} Sell', color='#1f77b4', linewidth=2, markersize=4)
             
             # MGP baseline
             if len(hourly_mgp) > 0:
                 ax.plot(hourly_mgp.index, hourly_mgp.values, 
-                       marker='^', label='MGP', color='#2ca02c', linewidth=2, linestyle='--')
+                       marker='^', label='MGP', color='#2ca02c', linewidth=2, linestyle='--', markersize=4)
         
         ax.set_xlabel('Hour', fontsize=9)
         ax.set_ylabel('Price (€/MWh)', fontsize=9)
         ax.set_title(f'{zone}', fontweight='bold', fontsize=10)
-        ax.legend(fontsize=8)
+        ax.legend(fontsize=8, loc='best')
         ax.grid(alpha=0.3)
+        ax.set_xticks(range(1, 25, 4))
     
     axes[7].axis('off')
     fig.suptitle(f'{market_name} vs MGP Prices - {date_str}', fontsize=14, fontweight='bold', y=0.995)
@@ -186,7 +152,7 @@ def analyze_market(market_name, market_file, mgp_file, output_dir, date_str):
     print(f"  ✓ {market_name.lower()}_sell_volumes.png")
     plt.close()
     
-    print(f"\n✅ {market_name} analysis complete - 5 visualizations created\n")
+    print(f"\n✅ {market_name} analysis complete - 3 visualizations created\n")
 
 
 def main():
