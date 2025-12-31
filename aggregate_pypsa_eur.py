@@ -57,8 +57,7 @@ def load_pypsa_eur():
     
     buses = pd.read_csv(PYPSA_DATA / 'buses.csv')
     
-    # Only load columns we need, ignore geometry to avoid parsing issues
-    # Use quotechar="'" to handle LINESTRING geometry fields
+    # Load AC lines
     lines = pd.read_csv(
         PYPSA_DATA / 'lines.csv',
         usecols=['line_id', 'bus0', 'bus1', 'voltage', 'circuits', 'length'],
@@ -66,12 +65,21 @@ def load_pypsa_eur():
         low_memory=False
     )
     
-    print(f"   Total buses: {len(buses):,}")
-    print(f"   Total lines: {len(lines):,}")
+    # Load DC links (HVDC connections)
+    links = pd.read_csv(
+        PYPSA_DATA / 'links.csv',
+        usecols=['link_id', 'bus0', 'bus1', 'voltage', 'p_nom', 'length'],
+        quotechar="'",
+        low_memory=False
+    )
     
-    return buses, lines
+    print(f"   Total buses: {len(buses):,}")
+    print(f"   Total AC lines: {len(lines):,}")
+    print(f"   Total DC links: {len(links):,}")
+    
+    return buses, lines, links
 
-def filter_italy_neighbors(buses, lines):
+def filter_italy_neighbors(buses, lines, links):
     """Filter only IT + neighbors."""
     print("\n" + "=" * 60)
     print("FILTERING ITALY + NEIGHBORS")
@@ -80,22 +88,26 @@ def filter_italy_neighbors(buses, lines):
     target_countries = ['IT', 'AT', 'FR', 'CH', 'SI', 'GR', 'ME']
     buses_filtered = buses[buses.country.isin(target_countries)].copy()
     
-    # Convert bus_id to int for matching with lines
+    # Convert bus_id to int for matching with lines/links
     buses_filtered['bus_id'] = buses_filtered['bus_id'].astype(int)
     
-    # Filter lines connecting these buses
+    # Filter lines and links connecting these buses
     bus_ids = set(buses_filtered.bus_id)
     lines_filtered = lines[
         lines.bus0.isin(bus_ids) & lines.bus1.isin(bus_ids)
     ].copy()
+    links_filtered = links[
+        links.bus0.isin(bus_ids) & links.bus1.isin(bus_ids)
+    ].copy()
     
     print(f"   Filtered buses: {len(buses_filtered):,}")
-    print(f"   Filtered lines: {len(lines_filtered):,}")
+    print(f"   Filtered AC lines: {len(lines_filtered):,}")
+    print(f"   Filtered DC links: {len(links_filtered):,}")
     for country in target_countries:
         count = len(buses_filtered[buses_filtered.country == country])
         print(f"      {country}: {count} buses")
     
-    return buses_filtered, lines_filtered
+    return buses_filtered, lines_filtered, links_filtered
 
 def map_to_gme_zones(buses):
     """Map buses to GME zones."""
@@ -141,7 +153,7 @@ def map_to_gme_zones(buses):
     
     return buses
 
-def aggregate_to_zones(buses, lines):
+def aggregate_to_zones(buses, lines, links):
     """Aggregate network to zonal level."""
     print("\n" + "=" * 60)
     print("AGGREGATING TO ZONES")
@@ -156,48 +168,86 @@ def aggregate_to_zones(buses, lines):
     }).reset_index()
     zonal_buses.columns = ['name', 'x', 'y', 'n_substations', 'max_voltage_kv']
     
-    # Map original buses to zones for line aggregation
+    # Map original buses to zones
     bus_to_zone = buses.set_index('bus_id')['zone'].to_dict()
     
+    # Aggregate AC lines
     lines['zone0'] = lines.bus0.map(bus_to_zone)
     lines['zone1'] = lines.bus1.map(bus_to_zone)
-    
-    # Inter-zonal lines
-    inter_zonal = lines[
+    inter_zonal_ac = lines[
         (lines.zone0.notna()) & 
         (lines.zone1.notna()) & 
         (lines.zone0 != lines.zone1)
     ].copy()
     
-    if len(inter_zonal) == 0:
-        print("   WARNING: No inter-zonal lines found!")
-        # Create empty lines dataframe
-        zonal_lines = pd.DataFrame(columns=['name', 'bus0', 'bus1', 'n_lines', 'voltage_kv', 'length_km', 'total_circuits', 's_nom', 'x'])
-        return zonal_buses, zonal_lines
-    
-    zonal_lines = inter_zonal.groupby(['zone0', 'zone1']).agg({
+    zonal_ac = inter_zonal_ac.groupby(['zone0', 'zone1']).agg({
         'line_id': 'count',
         'voltage': 'max',
         'length': 'mean',
         'circuits': 'sum'
     }).reset_index()
+    zonal_ac.columns = ['bus0', 'bus1', 'n_lines', 'voltage_kv', 'length_km', 'total_circuits']
+    zonal_ac['type'] = 'AC'
     
-    zonal_lines.columns = ['bus0', 'bus1', 'n_lines', 'voltage_kv', 'length_km', 'total_circuits']
-    zonal_lines['name'] = zonal_lines.apply(lambda r: f"{r['bus0']}_{r['bus1']}", axis=1)
+    # Aggregate DC links
+    links['zone0'] = links.bus0.map(bus_to_zone)
+    links['zone1'] = links.bus1.map(bus_to_zone)
+    inter_zonal_dc = links[
+        (links.zone0.notna()) & 
+        (links.zone1.notna()) & 
+        (links.zone0 != links.zone1)
+    ].copy()
     
-    # Estimate capacity
-    def estimate_capacity(row):
+    zonal_dc = inter_zonal_dc.groupby(['zone0', 'zone1']).agg({
+        'link_id': 'count',
+        'voltage': 'max',
+        'length': 'mean',
+        'p_nom': 'sum'  # DC links have p_nom directly
+    }).reset_index()
+    zonal_dc.columns = ['bus0', 'bus1', 'n_lines', 'voltage_kv', 'length_km', 'total_p_nom']
+    zonal_dc['type'] = 'DC'
+    
+    # Combine AC and DC
+    all_connections = []
+    
+    # Add AC lines
+    for _, row in zonal_ac.iterrows():
         v = row['voltage_kv']
         n = max(row['total_circuits'], row['n_lines'])
-        if v >= 380: return n * 1500
-        elif v >= 220: return n * 500
-        else: return n * 200
+        if v >= 380: s_nom = n * 1500
+        elif v >= 220: s_nom = n * 500
+        else: s_nom = n * 200
+        
+        all_connections.append({
+            'bus0': row['bus0'],
+            'bus1': row['bus1'],
+            'n_lines': row['n_lines'],
+            'voltage_kv': row['voltage_kv'],
+            'length_km': row['length_km'],
+            's_nom': s_nom,
+            'type': 'AC'
+        })
     
-    zonal_lines['s_nom'] = zonal_lines.apply(estimate_capacity, axis=1)
+    # Add DC links
+    for _, row in zonal_dc.iterrows():
+        all_connections.append({
+            'bus0': row['bus0'],
+            'bus1': row['bus1'],
+            'n_lines': row['n_lines'],
+            'voltage_kv': row['voltage_kv'],
+            'length_km': row['length_km'],
+            's_nom': row['total_p_nom'],  # Use p_nom directly
+            'type': 'DC'
+        })
+    
+    zonal_lines = pd.DataFrame(all_connections)
+    zonal_lines['name'] = zonal_lines.apply(lambda r: f"{r['bus0']}_{r['bus1']}", axis=1)
     zonal_lines['x'] = zonal_lines['length_km'] * 0.0001
     
     print(f"   Zonal buses: {len(zonal_buses)}")
-    print(f"   Inter-zonal lines: {len(zonal_lines)}")
+    print(f"   Inter-zonal AC lines: {len(zonal_ac)}")
+    print(f"   Inter-zonal DC links: {len(zonal_dc)}")
+    print(f"   Total connections: {len(zonal_lines)}")
     
     return zonal_buses, zonal_lines
 
@@ -213,10 +263,10 @@ def save_results(zonal_buses, zonal_lines):
     print(f"      Zones: {list(zonal_buses.name)}")
 
 def main():
-    buses, lines = load_pypsa_eur()
-    buses_filt, lines_filt = filter_italy_neighbors(buses, lines)
+    buses, lines, links = load_pypsa_eur()
+    buses_filt, lines_filt, links_filt = filter_italy_neighbors(buses, lines, links)
     buses_mapped = map_to_gme_zones(buses_filt)
-    zonal_buses, zonal_lines = aggregate_to_zones(buses_mapped, lines_filt)
+    zonal_buses, zonal_lines = aggregate_to_zones(buses_mapped, lines_filt, links_filt)
     save_results(zonal_buses, zonal_lines)
 
 if __name__ == "__main__":
