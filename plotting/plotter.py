@@ -131,23 +131,20 @@ class GMEPlotter:
         )
         
         # Add text labels for prices
+        it_zones = {'NORD', 'CNOR', 'CSUD', 'SUD', 'CALA', 'SICI', 'SARD'}
         for idx, row in self.network.buses.iterrows():
-            if row.marginal_price > 0:
+            if row.marginal_price > 0 and idx in it_zones:
                 ax.text(row.x, row.y, f"{idx}\n€{row.marginal_price:.1f}",
+                       fontsize=8, ha='center', va='bottom',
+                       bbox=dict(boxstyle='round,pad=0.3', facecolor='white', alpha=0.7))
+            else:
+                ax.text(row.x, row.y, f"{idx}",
                        fontsize=8, ha='center', va='bottom',
                        bbox=dict(boxstyle='round,pad=0.3', facecolor='white', alpha=0.7))
         
         # Get market name from filename/data
         market_name = self._get_market_name()
         plt.title(f"GME {market_name} Prices (Hour {hour})", fontsize=14, fontweight='bold')
-        
-        # Color bar
-        sm = plt.cm.ScalarMappable(cmap='viridis', 
-                                   norm=plt.Normalize(vmin=self.network.buses.marginal_price.min(), 
-                                                     vmax=self.network.buses.marginal_price.max()))
-        sm.set_array([])
-        cbar = plt.colorbar(sm, ax=ax, orientation='vertical', pad=0.02, fraction=0.03)
-        cbar.set_label('Price (€/MWh)', fontsize=10)
         
         plt.tight_layout()
         plt.savefig(output_file, dpi=300, bbox_inches='tight')
@@ -268,22 +265,19 @@ class GMEPlotter:
         )
         
         # Add labels
+        it_zones = {'NORD', 'CNOR', 'CSUD', 'SUD', 'CALA', 'SICI', 'SARD'}
         for idx, row in self.network.buses.iterrows():
-            if row.marginal_price > 0:
+            if row.marginal_price > 0 and idx in it_zones:
                 ax.text(row.x, row.y, f"{idx}\n€{row.marginal_price:.1f}",
+                       fontsize=8, ha='center', va='bottom',
+                       bbox=dict(boxstyle='round,pad=0.3', facecolor='white', alpha=0.7))
+            else:
+                ax.text(row.x, row.y, f"{idx}",
                        fontsize=8, ha='center', va='bottom',
                        bbox=dict(boxstyle='round,pad=0.3', facecolor='white', alpha=0.7))
         
         market_name = self._get_market_name()
         plt.title(f"GME {market_name} Flows (Hour {hour})", fontsize=14, fontweight='bold')
-        
-        # Price colorbar
-        sm_price = plt.cm.ScalarMappable(cmap='viridis', 
-                                         norm=plt.Normalize(vmin=self.network.buses.marginal_price.min(), 
-                                                           vmax=self.network.buses.marginal_price.max()))
-        sm_price.set_array([])
-        cbar_price = plt.colorbar(sm_price, ax=ax, orientation='vertical', pad=0.02, fraction=0.03, location='left')
-        cbar_price.set_label('Price (€/MWh)', fontsize=10)
         
         # Utilization colorbar
         sm_util = plt.cm.ScalarMappable(cmap='RdYlGn_r',

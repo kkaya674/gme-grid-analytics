@@ -156,9 +156,10 @@ def create_animation(network_path, price_csv, flow_csv, output_file='mgp_animati
         )
         
         # Add zone labels with prices
+        it_zones = {'NORD', 'CNOR', 'CSUD', 'SUD', 'CALA', 'SICI', 'SARD'}
         for idx, row in plotter.network.buses.iterrows():
             price = row.marginal_price
-            if price > 0:
+            if price > 0 and idx in it_zones:
                 label_text = f"{idx}\n€{price:.1f}"
             else:
                 label_text = idx
@@ -177,15 +178,9 @@ def create_animation(network_path, price_csv, flow_csv, output_file='mgp_animati
         from matplotlib import cm
         import matplotlib as mpl
         
-        # Price colorbar
-        price_min = plotter.prices_df['price'].min()
-        price_max = plotter.prices_df['price'].max()
-        sm_price = cm.ScalarMappable(cmap='viridis', 
-                                     norm=mpl.colors.Normalize(vmin=price_min, vmax=price_max))
-        sm_price.set_array([])
-        cbar_price = plt.colorbar(sm_price, ax=ax, orientation='vertical', 
-                                  pad=0.02, fraction=0.03, location='left')
-        cbar_price.set_label('Price (€/MWh)', fontsize=10)
+        # Colorbarsx
+        from matplotlib import cm
+        import matplotlib as mpl
         
         # Utilization colorbar
         sm_util = cm.ScalarMappable(cmap='RdYlGn_r',
@@ -222,7 +217,7 @@ def main():
     parser = argparse.ArgumentParser(description='Create GME flow animation')
     parser.add_argument('--date', type=str, default='2025-12-30',
                        help='Date to animate (YYYY-MM-DD)')
-    parser.add_argument('--output', type=str, default='mgp_flow_animation.gif',
+    parser.add_argument('--output', type=str, default='analysis/mgp_flow_animation.gif',
                        help='Output GIF filename')
     
     args = parser.parse_args()
