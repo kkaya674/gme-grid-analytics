@@ -43,12 +43,23 @@ def analyze_market(market_name, market_file, mgp_file, output_dir, date_str):
     # Filter Italian zones
     market_it = market_df[market_df['zone'].isin(ITALIAN_ZONES)].copy()
     
-    # Fill NaN prices with 0 for visualization
-    market_it['averagepurchasingprice'] = market_it['averagepurchasingprice'].fillna(0)
-    market_it['averagesellingprice'] = market_it['averagesellingprice'].fillna(0)
+    # Use MAXIMUM prices (more relevant for market analysis)
+    # For buying: use minimum purchasing price (what buyers pay at minimum)
+    # For selling: use maximum selling price (what sellers get at maximum)
+    if 'minimumpurchasingprice' in market_it.columns:
+        market_it['buy_price'] = market_it['minimumpurchasingprice'].fillna(0)
+    else:
+        market_it['buy_price'] = market_it['averagepurchasingprice'].fillna(0)
+    
+    if 'maximumsellingprice' in market_it.columns:
+        market_it['sell_price'] = market_it['maximumsellingprice'].fillna(0)
+    else:
+        market_it['sell_price'] = market_it['averagesellingprice'].fillna(0)
     
     print(f"Total {market_name} records (Italian zones): {len(market_it)}")
     print(f"Sessions with activity: {len(market_it[(market_it['volumespurchased']>0) | (market_it['volumessold']>0)])}")
+    print(f"Non-zero buy prices: {(market_it['buy_price'] > 0).sum()}")
+    print(f"Non-zero sell prices: {(market_it['sell_price'] > 0).sum()}")
     
     # Create output directory
     Path(output_dir).mkdir(exist_ok=True)
@@ -65,21 +76,18 @@ def analyze_market(market_name, market_file, mgp_file, output_dir, date_str):
         if len(zone_market) > 0 and len(zone_mgp) > 0:
             # Average by hour (handle multiple periods)
             hourly_market = zone_market.groupby('hour').agg({
-                'averagepurchasingprice': 'mean',
-                'averagesellingprice': 'mean'
+                'buy_price': 'mean',
+                'sell_price': 'mean'
             })
             hourly_mgp = zone_mgp.groupby('hour')['price'].mean()
             
             hours = hourly_market.index
             
-            # Plot 3 lines - replace 0 with None for cleaner visualization
-            buy_prices = hourly_market['averagepurchasingprice'].replace(0, np.nan)
-            sell_prices = hourly_market['averagesellingprice'].replace(0, np.nan)
-            
-            ax.plot(hours, buy_prices, 
-                   marker='o', label=f'{market_name} Buy', color='#d62728', linewidth=2, markersize=4)
-            ax.plot(hours, sell_prices, 
-                   marker='s', label=f'{market_name} Sell', color='#1f77b4', linewidth=2, markersize=4)
+            # Plot 3 lines - keep zeros as zeros (no NaN replacement)
+            ax.plot(hours, hourly_market['buy_price'], 
+                   marker='o', label=f'{market_name} Buy (Min)', color='#d62728', linewidth=2, markersize=4)
+            ax.plot(hours, hourly_market['sell_price'], 
+                   marker='s', label=f'{market_name} Sell (Max)', color='#1f77b4', linewidth=2, markersize=4)
             
             # MGP baseline
             if len(hourly_mgp) > 0:
